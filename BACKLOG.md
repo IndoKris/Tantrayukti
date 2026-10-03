@@ -12,3 +12,7 @@ Add here instead of expanding a phase's scope.
 - [Phase 4] Self-service registration and password reset; users are created with `createsuperuser` or the admin today.
 - [Phase 4] `seed_users` management command for demo admin/manager/member accounts, to pair with Phase 5's `seed_spaces`.
 - [Phase 4] Scope roles per organisation rather than globally, once Phase 5's hierarchy exists.
+- [Phase 5] Organisation-level roles on `spaces.Membership`, so a user can be a manager in one organisation and a member in another.
+- [Phase 5] Move list filtering to django-filter instead of hand-rolled query-param filters in `get_queryset`.
+- [Phase 5] Bulk space import from CSV/XLSX, for onboarding a real building without hand-entering rooms.
+- [Phase 5] Cache the derived `total_area_sqm` / `total_occupancy` rollups if the tree endpoint gets slow on large hierarchies.

@@ -190,3 +190,36 @@ was recreated: swapping `AUTH_USER_MODEL` is incompatible with tables already bu
 **Design note — roles are never trusted from the token.** The JWT carries a `role` claim so the UI can
 render role-appropriate controls without a second request, but every permission class reads the role
 from the database. A test asserts that a role change takes effect on an already-issued token.
+
+---
+
+## 11. Phase 5 changes to the repo
+
+Created in `backend/spaces/`: `__init__.py`, `apps.py`, `models.py`, `serializers.py`, `views.py`,
+`urls.py`, `admin.py`, `migrations/{__init__,0001_initial}.py`,
+`management/commands/seed_spaces.py` (+ package `__init__` files),
+`tests/{__init__,test_models,test_api,test_seed}.py`.
+Modified in `backend/`: `config/settings.py` (registered `spaces`), `config/urls.py` (mounted
+`/api/spaces/`).
+Deleted / renamed: **nothing**.
+
+**Design decisions worth carrying forward**
+
+* *Area and occupancy resolve upwards.* `area_sqm` and `occupancy` are nullable on Building and
+  Floor; `total_area_sqm` / `total_occupancy` return the stated value when present and otherwise the
+  sum of children. A stated value therefore wins, so shared space such as corridors is not lost by
+  summing rooms.
+* *Unknown stays `None`, never `0`.* `_sum_area` returns `None` when no descendant states an area.
+  Phase 16 normalises per m2, so this keeps "unknown" distinct from "zero" and prevents a
+  divide-by-zero producing a fake comparison.
+* *Scoping lives in `get_queryset`.* Every viewset filters to the caller's organisations, so a
+  foreign object returns **404, not 403** — a forgotten object-level check cannot leak data through a
+  detail route, a nested write or a query-param filter. Tests assert this for list, detail, filter
+  and PATCH.
+* *Creating an organisation grants the creator membership*, otherwise the new organisation would be
+  invisible to the person who just made it.
+* *`seed_spaces` never invents a password.* It attaches to an existing superuser when one exists; with
+  no users at all it creates `seed-admin` with an **unusable** password and prints the
+  `changepassword` command. Re-running is idempotent (`update_or_create` throughout).
+* Building carries optional `latitude` / `longitude` for the Phase 22 community map; the seed values
+  are Nagpur coordinates already rounded to city level.

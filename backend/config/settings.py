@@ -64,7 +64,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     # Local
     "accounts",
-    # Further local apps are added by later phases (spaces, telemetry, ...).
+    "spaces",
+    # Further local apps are added by later phases (telemetry, billing, ...).
 ]
 
 MIDDLEWARE = [

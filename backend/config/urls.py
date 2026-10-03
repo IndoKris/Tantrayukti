@@ -13,6 +13,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/health/", HealthView.as_view(), name="health"),
     path("api/auth/", include("accounts.urls")),
+    path("api/spaces/", include("spaces.urls")),
     # Later phases add, for example:
     #   path("api/", include("telemetry.urls")),
 ]
