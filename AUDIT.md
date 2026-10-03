@@ -258,3 +258,44 @@ report an identical `last_seen_at`.
 device replaying its flash buffer after a failed upload cannot duplicate rows. Each batch is sorted
 by timestamp before insert, so a backfill is written in sample order. The response returns
 `created` / `duplicates` / `received` so firmware can trim its buffer with confidence.
+
+---
+
+## 13. Phase 7 changes to the repo
+
+Created in `simulator/`: `profiles.py` (appliance catalogue and behaviours), `generator.py`
+(time loop and fault injection), `api.py` (stdlib API client), `run.py` (CLI), `README.md`.
+Modified at root: `.gitignore` (excludes `simulator/.tokens.json`, which holds live device
+credentials).
+Deleted / renamed: **nothing**.
+
+**Stdlib only.** The simulator imports nothing outside the standard library, including for HTTP
+(`urllib.request`). The phase's check runs `python simulator/run.py` from the repo root with the
+system interpreter, which has no project dependencies installed, so any third-party import would
+have broken it. `run.py` inserts its own directory on `sys.path`, so both
+`python simulator/run.py` and `python -m simulator.run` work.
+
+**Reproducibility is a requirement, not a nicety.** Each appliance gets an RNG seeded from
+`seed:site:appliance`, so adding an appliance does not shift the numbers generated for the others.
+Two runs with identical arguments produce byte-identical CSV, verified with `cmp`. Phase 13
+evaluates anomaly detection against faults injected here, so data that moved between runs would
+make precision/recall incomparable.
+
+**Faults are labelled per sample.** The `fault` column records which fault was active. Faults start
+60% of the way into a run, leaving clean history for a baseline. Verified label counts for a 10-day
+office run with two faults: 17472 clean, 2112 `baseload-jump`, 384 `night-load`, 192 both.
+
+**Mains plus appliances.** Each site emits one series per appliance *and* a `mains` series that is
+their sum, because Phase 13 needs per-device series while Phase 23 NILM needs the aggregate. The
+summary prints both totals so the sum always reconciles (verified identical to 2 dp).
+
+**Electrical consistency.** Current is derived as `I = P / (V x pf)` rather than generated
+independently, so every posted reading passes the Phase 6 server-side check that active power
+cannot exceed apparent power.
+
+**Two bugs found by verification beyond the phase check, both fixed:**
+
+1. An empty, missing or malformed `--tokens` file raised an uncaught `JSONDecodeError` traceback.
+   Now reported as a readable error via `read_token_file`, exit 1.
+2. When every upload batch failed, the process still exited 0 — a scripted run would have believed
+   the data landed. `post_series` now returns a failure count and the process exits 1.

@@ -11,7 +11,7 @@ Status values: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | 4 | Auth and roles | A Foundation | DONE | Custom `accounts.User` with admin/manager/member roles, JWT login/refresh/verify/me with role claim, role permission classes, frontend AuthProvider + ProtectedRoute + login page; 25 accounts tests (33 total) pass. |
 | 5 | Spaces hierarchy | A Foundation | DONE | Organisation > Building > Floor > Room with derived area/occupancy, membership-scoped CRUD + `/tree/`, idempotent `seed_spaces` (office + home); 46 spaces tests (79 total) pass. |
 | 6 | Telemetry ingestion | B Data pipeline | DONE | Device + Reading models with named units, hashed device-token auth, `POST /api/readings/` (single/list/wrapped, validated, idempotent chronological backfill), digital-twin status; 69 telemetry tests (148 total) pass. |
-| 7 | Simulator | B Data pipeline | TODO | |
+| 7 | Simulator | B Data pipeline | DONE | Stdlib-only generator for home + office (6 appliances each + mains sum), seeded and byte-reproducible, 3 injectable faults with per-sample labels, CSV or live POST with device auto-registration. |
 | 8 | Rollups API | B Data pipeline | TODO | |
 | 9 | Cost and CO2 engines | B Data pipeline | TODO | |
 | 10 | ML data and synthetic generator | C Machine learning | TODO | |

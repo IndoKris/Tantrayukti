@@ -21,3 +21,8 @@ Add here instead of expanding a phase's scope.
 - [Phase 6] Emit UTC on every API route instead of the active timezone, if the frontend ever needs offset-free timestamps.
 - [Phase 6] Retention/downsampling policy for `Reading` once the table grows past a few million rows.
 - [Phase 6] Reconcile `reported_buffer_count` against observed late arrivals and alert when the device's buffer never drains.
+- [Phase 7] Weather-driven AC load from a real temperature series instead of the sinusoidal proxy in `profiles.py`.
+- [Phase 7] `--live` mode that posts one reading per interval in real time, for demoing the online/offline badge.
+- [Phase 7] Extra faults: phase imbalance, failing compressor (rising current at constant power), meter drift.
+- [Phase 7] Unit tests for the simulator itself; it is currently verified by CLI runs, not by the backend test suite.
+- [Phase 7] Occupancy schedule as data (holidays, shift patterns) rather than hard-coded hour windows.

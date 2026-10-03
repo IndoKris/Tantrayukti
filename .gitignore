@@ -52,6 +52,9 @@ pnpm-debug.log*
 Thumbs.db
 *.swp
 
+# Simulator device-token cache (contains live device credentials)
+simulator/.tokens.json
+
 # PlatformIO (firmware)
 firmware/.pio/
 firmware/.pioenvs/
