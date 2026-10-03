@@ -1,3 +1,13 @@
+/* Original Vite starter stylesheet, preserved.
+ *
+ * Phase 3 change (see ../../AUDIT.md C9): the rules that used to target `#root` and the
+ * bare `h1 / h2 / p / code` element selectors are now nested under `.starter-shell`, so
+ * they style only the preserved starter page (src/pages/Welcome.tsx) instead of every
+ * page in the app. No declaration was removed or altered — only the scope changed.
+ * The `:root` design tokens and the dark-mode token block remain global and are reused
+ * by the EcoTrack theme in src/styles/tailwind.css.
+ */
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -50,7 +60,12 @@
   }
 }
 
-#root {
+body {
+  margin: 0;
+}
+
+/* Starter page shell. Was `#root` before Phase 3. */
+.starter-shell {
   width: 1126px;
   max-width: 100%;
   margin: 0 auto;
@@ -60,52 +75,50 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-}
 
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  h1,
+  h2 {
+    font-family: var(--heading);
+    font-weight: 500;
+    color: var(--text-h);
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+  h1 {
+    font-size: 56px;
+    letter-spacing: -1.68px;
+    margin: 32px 0;
+    @media (max-width: 1024px) {
+      font-size: 36px;
+      margin: 20px 0;
+    }
   }
-}
-p {
-  margin: 0;
-}
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
+  h2 {
+    font-size: 24px;
+    line-height: 118%;
+    letter-spacing: -0.24px;
+    margin: 0 0 8px;
+    @media (max-width: 1024px) {
+      font-size: 20px;
+    }
+  }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  p {
+    margin: 0;
+  }
+
+  code,
+  .counter {
+    font-family: var(--mono);
+    display: inline-flex;
+    border-radius: 4px;
+    color: var(--text-h);
+  }
+
+  code {
+    font-size: 15px;
+    line-height: 135%;
+    padding: 4px 8px;
+    background: var(--code-bg);
+  }
 }

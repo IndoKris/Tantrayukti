@@ -1,0 +1,51 @@
+/* EcoTrack theme. Tailwind v4 is configured here in CSS - there is no tailwind.config.js. */
+@import 'tailwindcss';
+
+@theme {
+  /* Brand ramp. Green reads as "energy saved"; it is the primary accent. */
+  --color-eco-50: #ecfdf5;
+  --color-eco-100: #d1fae5;
+  --color-eco-200: #a7f3d0;
+  --color-eco-300: #6ee7b7;
+  --color-eco-400: #34d399;
+  --color-eco-500: #10b981;
+  --color-eco-600: #059669;
+  --color-eco-700: #047857;
+  --color-eco-800: #065f46;
+  --color-eco-900: #064e3b;
+
+  /* Severity ramp, reused by the anomaly feed in Phase 19. */
+  --color-severity-low: #0ea5e9;
+  --color-severity-medium: #f59e0b;
+  --color-severity-high: #ef4444;
+  --color-severity-critical: #b91c1c;
+
+  --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+}
+
+/* Surface tokens, driven by the OS theme so the app matches the starter page's
+ * `color-scheme: light dark`. Referenced via bg-(--surface) style utilities. */
+:root {
+  --surface: #f8fafc;
+  --surface-raised: #ffffff;
+  --surface-border: #e2e8f0;
+  --surface-text: #0f172a;
+  --surface-muted: #64748b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #0f172a;
+    --surface-raised: #1e293b;
+    --surface-border: #334155;
+    --surface-text: #f1f5f9;
+    --surface-muted: #94a3b8;
+  }
+}
+
+/* Numbers in tables and metric cards must align; units are always rendered as a
+ * separate muted span so a kWh value can never be mistaken for a kW one. */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}

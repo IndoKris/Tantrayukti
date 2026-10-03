@@ -7,7 +7,7 @@ Status values: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | --- | --- | --- | --- | --- |
 | 1 | Audit existing repo and add tracking | A Foundation | DONE | Audited repo (empty uv backend, React 19 + TS Vite frontend); added AUDIT/PROGRESS/BACKLOG, root .gitignore, layout folders, README plan section. |
 | 2 | Backend skeleton | A Foundation | DONE | Django 5.2 + DRF + CORS in `config/`, env-driven settings with SQLite fallback, requirements.txt, .env.example, `GET /api/health/`; 8 tests pass. |
-| 3 | Frontend skeleton | A Foundation | TODO | |
+| 3 | Frontend skeleton | A Foundation | DONE | Tailwind v4 + react-router 7 added to the existing React 19/TS app; layout shell, 6 placeholder pages + 404, API client with `VITE_API_BASE_URL` and dev proxy; starter page preserved at `/welcome`. |
 | 4 | Auth and roles | A Foundation | TODO | |
 | 5 | Spaces hierarchy | A Foundation | TODO | |
 | 6 | Telemetry ingestion | B Data pipeline | TODO | |

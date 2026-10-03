@@ -91,14 +91,15 @@ unmodified Vite template. The repo is a fresh two-folder scaffold, not a partial
 
 | # | Conflict | Resolution (precedence rule: keep existing code) |
 | --- | --- | --- |
-| C1 | Plan says **React 18**; repo has **React 19.2** | **Keep React 19.** Newer, working, and not a different framework. Recharts / Framer Motion / Leaflet / react-router all support React 19. |
-| C2 | Plan implies **JavaScript** (`.jsx`); repo is **TypeScript** (`.tsx`, `tsc -b` in the build) | **Keep TypeScript.** All new frontend files will be `.ts`/`.tsx`. |
+| C1 | Plan says **React 18**; repo has **React 19.2** | **Resolved in Phase 3.** Kept React 19; react-router 7.18 installed and building cleanly against it. Recharts / Framer Motion / Leaflet are installed by the phases that need them. |
+| C2 | Plan implies **JavaScript** (`.jsx`); repo is **TypeScript** (`.tsx`, `tsc -b` in the build) | **Resolved in Phase 3.** All new frontend files are `.ts`/`.tsx` and pass `tsc -b` under the repo's strict options (`verbatimModuleSyntax`, `erasableSyntaxOnly`, `noUnusedLocals`). |
 | C3 | Plan says `requirements.txt`; repo uses **`uv` + `pyproject.toml`** | **Resolved in Phase 2.** `pyproject.toml` is the source of truth; `requirements.txt` is generated from it with `uv export` (command recorded in the file's header and in `backend/README.md`). |
 | C4 | `backend/.python-version` pins **3.13**; local interpreter is **3.12.2** | **Resolved in Phase 2.** `.python-version` set to `3.12` and `requires-python` relaxed to `>=3.12`, matching the installed interpreter and keeping TensorFlow wheels available for Phase 11. |
 | C5 | Plan's Check commands use bare `python manage.py …`; repo convention is `uv run` | Phase 2 will create a real `manage.py` so the plan's commands work verbatim; `uv run python manage.py …` remains the equivalent. |
 | C6 | Plan's Phase 1 (`CFT-WORKFLOW.md` version) says "scaffold from empty repo" | `CLAUDE-plan.md` supersedes it — the repo is not empty. `CFT-WORKFLOW.md` is kept as the original reference only. |
-| C7 | Plan names no styling layer in the repo; repo has **plain CSS**, no Tailwind | Add Tailwind in Phase 3 **alongside** the existing CSS; do not delete `App.css` / `index.css`. |
+| C7 | Plan names no styling layer in the repo; repo has **plain CSS**, no Tailwind | **Resolved in Phase 3.** Tailwind v4 added via `@tailwindcss/vite` with the theme in `src/styles/tailwind.css` (no `tailwind.config.js`). `App.css` is untouched; `index.css` was rescoped only (see C9). |
 | C8 | `backend/main.py` stub has no role once Django exists | Leave the file in place (rule 9: never delete earlier work). Harmless. |
+| C9 | `src/index.css` pinned `#root` to a fixed **1126px centred column** with `border-inline`, and styled bare `h1 / h2 / p / code` globally — incompatible with a dashboard shell | **Adapted in Phase 3.** Those rules are now nested under `.starter-shell` instead of `#root`. Every declaration was preserved verbatim; only the scope changed. The starter page keeps its exact appearance at `/welcome`, which applies the class. Justified by precedence rule 1: a fixed centred column contradicts the Mission's dashboard. The `:root` tokens and dark-mode block stay global and are reused by the EcoTrack theme. |
 
 No conflict contradicts the Mission, so no phase is blocked by the above.
 
@@ -139,3 +140,27 @@ backend setup guide).
 Deleted / renamed: **nothing** — `backend/main.py` is left in place, unused (conflict C8).
 Untracked build output: `backend/.venv/`, `backend/db.sqlite3`, `backend/uv.lock` — the first two are
 covered by `.gitignore`; `uv.lock` is intentionally committable for reproducible installs.
+
+---
+
+## 9. Phase 3 changes to the repo
+
+Created in `frontend/`: `src/routes.tsx`, `src/vite-env.d.ts`, `src/styles/tailwind.css`,
+`src/api/client.ts`, `src/hooks/useHealth.ts`,
+`src/components/{AppLayout,ApiStatusBadge,PagePlaceholder}.tsx`,
+`src/pages/{Dashboard,Spaces,Insights,Reports,Community,Profile,NotFound,Welcome}.tsx`,
+`.env.example`.
+Modified in `frontend/`: `package.json` + `package-lock.json` (react-router-dom 7.18.4,
+tailwindcss 4.3.3, @tailwindcss/vite 4.3.3), `vite.config.ts` (Tailwind plugin + `/api` dev proxy to
+`127.0.0.1:8000`), `src/main.tsx` (renders `RouterProvider`; imports the Tailwind entry stylesheet),
+`src/index.css` (rescoped only — conflict C9).
+Deleted / renamed: **nothing**. `src/App.tsx`, `src/App.css`, `src/assets/` and `public/` are
+byte-for-byte unchanged; `App.tsx` is rendered by `src/pages/Welcome.tsx` at `/welcome`.
+
+Verified beyond the phase's Check: `npm run lint` clean, every module transforms through Vite with
+HTTP 200, the dev proxy returns the real health payload from Django, SPA deep links fall back
+correctly, and the custom theme tokens appear in the production CSS bundle.
+
+**Environment note.** The Vite dev server binds IPv6-only on this machine (`[::1]:5173`), so
+`http://127.0.0.1:5173` will not connect — use `http://localhost:5173`. Port 5173 was already held by
+another process during Phase 3, so verification ran on 5199; that process was left alone.
