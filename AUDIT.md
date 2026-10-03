@@ -405,3 +405,64 @@ from mains) and 5500 INR under `metering=all` (500 kWh double counted).
 Every bill is returned as auditable lines - per-slab units and a `formula` string, per-window
 time-of-day adjustments, fixed charge, tax, effective rate - because Phase 15 must show the formula
 behind a claimed saving and Phase 19 the formula behind a bill.
+
+---
+
+## 16. Phase 10 changes to the repo
+
+Created in `backend/ml/`: `__init__.py`, `data/{__init__,sources,clean,synthetic,prepare}.py`,
+`data/README.md`, `tests/{__init__,test_data}.py`, plus empty `training/__init__.py` and
+`evaluation/__init__.py` for the next phases.
+Modified in `backend/`: `pyproject.toml` (new `[ml]` extra: pandas 3.0.6, numpy 2.5.3),
+`requirements.txt` (regenerated with the `ml` extra).
+Deleted / renamed: **nothing**. No migration, no Django app - `ml/` is a plain package.
+
+**Dependencies are an optional extra.** pandas and numpy live in a `[project.optional-dependencies]`
+group named `ml`, so a deployment that only serves the API can install the base set and skip ~100 MB
+of numerical libraries. Install with `uv sync --extra ml`.
+
+**The UCI download succeeded, so the processed household series is real measured data.**
+120,000 raw 1-minute rows reduced to 1,999 complete hourly rows (8 rows missing active power,
+2 incomplete hours dropped). Both the raw and processed directories were already covered by
+`.gitignore`, verified with `git check-ignore`.
+
+**Both fallback paths were exercised, not just written.** `--synthetic` and a simulated download
+failure (unreachable URL with the cached file hidden) each produced a complete synthetic dataset,
+flagged `is_synthetic=1` on every row, with the failure reason recorded in the provenance sidecar
+and a `NOTE:` printed to stdout. Neither path retries or blocks.
+
+**The kW/kWh boundary, which is the whole reason this module exists.** The UCI file records
+`Global_active_power` in **kilowatts** sampled per minute while `Sub_metering_*` records **watt-hours
+per minute** - two different unit families in one file. Averaging kilowatts over an hour yields
+kilowatts, not kilowatt-hours. Every processed column is therefore named for its unit
+(`energy_kwh`, `mean_power_kw`, `peak_power_kw`), and a test pins that a constant 2 kW draw for one
+hour is 2 kWh. Over a one-hour window `energy_kwh` and `mean_power_kw` are numerically equal, which
+is exactly why they need distinct names: the equality is an artefact of the window length, not an
+identity.
+
+**Decisions that protect every downstream metric:**
+
+* *The target is dropped, never imputed.* Rows with no `Global_active_power` are discarded, because
+  filling the forecasting target would fabricate the label the model is scored against.
+* *Incomplete hours are dropped, not scaled.* An hour holding 12 of its 60 minutes would contribute
+  a fifth of its real energy and bias the model; the threshold is 80% coverage and the number
+  dropped is reported.
+* *The split is chronological, never random.* `time_ordered_split` is 70/15/15 by time. A random
+  split on a time series leaks the future into training and yields scores that cannot be reproduced
+  in production.
+* *Hour and month are also sine/cosine encoded*, so hour 23 and hour 0 are adjacent rather than 23
+  units apart. A test asserts the encoded distance is small.
+
+**The emission-factor series is always synthetic, and says so everywhere.** No public hourly CO2
+intensity series for the Indian grid is downloaded by this project, so there is nothing real to fall
+back to - which is why the labelling is non-negotiable rather than a nicety. The generator encodes
+three real mechanisms (coal baseload overnight, solar dilution at midday, evening peakers) plus a
+load-driven term, producing a mean of 0.831 kg CO2/kWh with the cleanest hour at 12:00 and the
+dirtiest at 19:00 - straddling the Phase 9 static 0.82 default so the modelled option stays
+comparable to it. The provenance says plainly: "A model trained on this learns the generator's
+assumptions, not the grid. Phase 12 metrics must say so."
+
+**Provenance sidecars.** Every processed file gets `<file>.provenance.json` recording source,
+licence, units, row count, date range, `is_synthetic`, and what cleaning removed. This is the
+upstream half of the plan's honesty rule: a metric is only as trustworthy as the provenance of the
+data behind it.

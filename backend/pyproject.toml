@@ -15,7 +15,14 @@ dependencies = [
     "djangorestframework-simplejwt>=5.3",
 ]
 
+# Machine-learning stack. Separated so a deployment that only serves the API can
+# install the base dependencies and skip ~100 MB of numerical libraries.
 [project.optional-dependencies]
+ml = [
+    "pandas>=2.2",
+    "numpy>=1.26",
+]
+
 # Only needed when DATABASE_URL points at PostgreSQL; SQLite is the documented fallback.
 postgres = ["psycopg[binary]>=3.2"]
 

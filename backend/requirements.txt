@@ -3,10 +3,11 @@
 # pyproject.toml is the source of truth (AUDIT.md C3). Regenerate this file after
 # changing dependencies there:
 #
-#   uv export --format requirements-txt --no-hashes --no-emit-project --extra postgres -o requirements.txt
+#   uv export --format requirements-txt --no-hashes --no-emit-project --extra postgres --extra ml -o requirements.txt
 #
 # Install without uv:  pip install -r requirements.txt
 # psycopg is only needed when DATABASE_URL points at PostgreSQL; SQLite is the fallback.
+# pandas/numpy come from the [ml] extra and are only needed for the ml/ pipeline.
 
 asgiref==3.12.1
     # via
@@ -29,19 +30,30 @@ djangorestframework==3.18.1
     #   djangorestframework-simplejwt
 djangorestframework-simplejwt==5.5.1
     # via backend
+numpy==2.5.3
+    # via
+    #   backend
+    #   pandas
+pandas==3.0.6
+    # via backend
 psycopg==3.3.6
     # via backend
 psycopg-binary==3.3.6 ; implementation_name != 'pypy'
     # via psycopg
 pyjwt==2.15.1
     # via djangorestframework-simplejwt
+python-dateutil==2.9.0.post0
+    # via pandas
 python-dotenv==1.2.4
     # via backend
+six==1.17.0
+    # via python-dateutil
 sqlparse==0.6.0
     # via django
 typing-extensions==4.16.0 ; python_full_version < '3.13'
     # via psycopg
-tzdata==2026.4 ; sys_platform == 'win32'
+tzdata==2026.4 ; sys_platform == 'emscripten' or sys_platform == 'win32'
     # via
     #   django
+    #   pandas
     #   psycopg

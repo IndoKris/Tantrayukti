@@ -37,3 +37,8 @@ Add here instead of expanding a phase's scope.
 - [Phase 9] Demand/sanctioned-load charges and power-factor penalties, which real commercial tariffs include.
 - [Phase 9] Replace the naive month projection with the Phase 11 LSTM forecast once it exists.
 - [Phase 9] Audit remaining hand-built responses for other Decimal/float or timezone inconsistencies of the kind fixed in Phases 6 and 9.
+- [Phase 10] Train the forecaster on the project's own telemetry/simulator output instead of a French household, once enough history exists.
+- [Phase 10] Use a real hourly grid CO2 intensity series (e.g. a CEA or POSOCO feed) to replace the synthetic emission-factor generator.
+- [Phase 10] Cache processed datasets as Parquet rather than CSV, to cut load time on the full UCI series.
+- [Phase 10] Checksum the UCI download so a truncated or changed archive is detected rather than silently parsed.
+- [Phase 10] Expose the provenance sidecar through the API so the Phase 19 metrics page can show it next to each figure.
