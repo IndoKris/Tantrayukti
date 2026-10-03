@@ -13,7 +13,7 @@ Status values: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | 6 | Telemetry ingestion | B Data pipeline | DONE | Device + Reading models with named units, hashed device-token auth, `POST /api/readings/` (single/list/wrapped, validated, idempotent chronological backfill), digital-twin status; 69 telemetry tests (148 total) pass. |
 | 7 | Simulator | B Data pipeline | DONE | Stdlib-only generator for home + office (6 appliances each + mains sum), seeded and byte-reproducible, 3 injectable faults with per-sample labels, CSV or live POST with device auto-registration. |
 | 8 | Rollups API | B Data pipeline | DONE | `GET /api/usage/` with hour/day/month local-time buckets, grouping by time/device/room, scope by space or device, and an explicit metering mode that prevents mains+appliance double counting; 64 rollup tests (212 total) pass. |
-| 9 | Cost and CO2 engines | B Data pipeline | TODO | |
+| 9 | Cost and CO2 engines | B Data pipeline | DONE | Cumulative slab + time-of-day + fixed charge + tax engines returning per-line formulas, month projection with stated assumptions, CO2 engine always naming its factor source; sample rates flagged; 96 billing tests (308 total) pass. |
 | 10 | ML data and synthetic generator | C Machine learning | TODO | |
 | 11 | LSTM forecasting | C Machine learning | TODO | |
 | 12 | Emission RF and CO2 trend | C Machine learning | TODO | |

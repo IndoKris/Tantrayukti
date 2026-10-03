@@ -347,3 +347,61 @@ root, stores a day of its output, and asserts the rollups reproduce the simulato
 peak-power totals, that 24 hourly buckets sum exactly to the daily bucket, and that `auto` metering
 picks mains over the simulated appliances. The class skips with a clear reason if the simulator
 cannot be imported, so a repo-layout change cannot silently break the suite.
+
+---
+
+## 15. Phase 9 changes to the repo
+
+Created in `backend/billing/`: `models.py`, `engines.py`, `serializers.py`, `views.py`, `urls.py`,
+`admin.py`, `apps.py`, `migrations/0001_initial.py`,
+`management/commands/seed_tariffs.py`, `tests/{test_cost,test_co2,test_api}.py` (+ package
+`__init__` files).
+Created in `backend/config/`: `encoders.py`.
+Modified in `backend/config/`: `settings.py` (registered `billing`; installed the decimal-safe
+renderer), `urls.py` (mounted `/api/billing/`).
+Deleted / renamed: **nothing**.
+
+**Precision bug found by the tests and fixed project-wide.** DRF's JSON encoder converts `Decimal`
+with `float(obj)`, so the API was emitting the emission factor `0.82` as
+`0.81999999999999995115...`, and every rupee and kWh figure in a hand-built response was similarly
+lossy. It also made hand-built responses inconsistent with serializer-built ones, since DRF's
+`DecimalField` already renders decimals as exact strings. `config/encoders.py` adds
+`DecimalStringJSONRenderer`, now the project's default renderer, which emits every `Decimal` as a
+string. This is the same class of defect as the Phase 6 timezone inconsistency: one API reporting
+the same quantity two different ways depending on which code path built the response. It affects
+the Phase 8 rollup output too, which previously returned float energy values.
+
+**How slabs and time-of-use combine.** Indian slab tariffs are cumulative over a billing month, so
+the engine applies slabs to the monthly total first, derives the blended effective rate
+(`energy charge / total kWh`), then applies time-of-day as
+`units_in_window x effective_rate x (multiplier - 1)`. A multiplier of 1.0 therefore contributes
+exactly nothing, and the adjustment stays proportional to what the customer actually pays per unit.
+Time-of-day windows are multipliers rather than absolute rates because Indian ToD tariffs are
+expressed as a percentage surcharge or rebate.
+
+**Windows use local hours and may wrap midnight**, so off-peak 22:00-06:00 is one row.
+A regression test stores a reading at 19:30 IST (14:00 UTC) and asserts it attracts the evening
+peak surcharge - reading the UTC hour would have placed it in the afternoon window and silently
+lost the charge.
+
+**Honesty measures, as the plan requires.**
+
+* Every seeded rate has `is_sample=True` and a `source` beginning "ILLUSTRATIVE SAMPLE RATES - not
+  an actual utility tariff", and both travel with every estimate.
+* The 0.82 kg CO2/kWh default is `is_verified=False`, and its `source` says it is static, unverified,
+  and should be checked against the CEA CO2 Baseline Database. A test asserts the source text names
+  the value, names CEA and says "static".
+* With no `EmissionFactor` row at all, the engine uses the documented default and sets
+  `is_fallback=True` rather than silently substituting a number.
+* With no tariff configured, the bill is zero with a note saying why - it never invents a rate.
+* Time-of-day rates present but no hourly data supplied produces a note, not a silent omission.
+* The month projection is explicitly naive (mean daily rate held flat) and lists four assumptions
+  including "No seasonal, weekday or weather adjustment is applied."
+
+**Billing reuses the Phase 8 metering guard**, so a room carrying both a mains meter and appliance
+meters is not billed twice. Verified by test: the same fixture bills 2000 INR under `auto` (250 kWh
+from mains) and 5500 INR under `metering=all` (500 kWh double counted).
+
+Every bill is returned as auditable lines - per-slab units and a `formula` string, per-window
+time-of-day adjustments, fixed charge, tax, effective rate - because Phase 15 must show the formula
+behind a claimed saving and Phase 19 the formula behind a bill.

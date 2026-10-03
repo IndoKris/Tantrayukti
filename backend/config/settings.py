@@ -66,7 +66,8 @@ INSTALLED_APPS = [
     "accounts",
     "spaces",
     "telemetry",
-    # Further local apps are added by later phases (billing, insights, ...).
+    "billing",
+    # Further local apps are added by later phases (insights, activity, ...).
 ]
 
 MIDDLEWARE = [
@@ -161,7 +162,10 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.JSONRenderer",
+        # Renders Decimal as a string rather than a lossy float; see
+        # config/encoders.py. Money, emission factors and energy totals are
+        # Decimal throughout, and float(Decimal("0.82")) is 0.81999999999999995.
+        "config.encoders.DecimalStringJSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",

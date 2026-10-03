@@ -15,5 +15,6 @@ urlpatterns = [
     path("api/auth/", include("accounts.urls")),
     path("api/spaces/", include("spaces.urls")),
     path("api/", include("telemetry.urls")),
-    # Later phases add billing and insights routes here.
+    path("api/billing/", include("billing.urls")),
+    # Later phases add insights routes here.
 ]

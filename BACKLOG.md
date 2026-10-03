@@ -31,3 +31,9 @@ Add here instead of expanding a phase's scope.
 - [Phase 8] Let `metering=auto` mix a mains meter with appliance meters in *sibling* rooms that have none, instead of choosing one kind estate-wide.
 - [Phase 8] Derive `mean_power_w` from energy over bucket duration as well as the sample mean, and expose both.
 - [Phase 8] Accept a `tz` query parameter so a client can request buckets in a timezone other than the server's.
+- [Phase 9] Validate slab contiguity on save (reject gaps/overlaps) instead of only reporting overflow at bill time.
+- [Phase 9] Real MSEDCL/utility tariff import so `is_sample` can be set false, with effective-date history.
+- [Phase 9] Per-reading CO2 using the Phase 12 hourly modelled factor, rather than one factor for the whole window.
+- [Phase 9] Demand/sanctioned-load charges and power-factor penalties, which real commercial tariffs include.
+- [Phase 9] Replace the naive month projection with the Phase 11 LSTM forecast once it exists.
+- [Phase 9] Audit remaining hand-built responses for other Decimal/float or timezone inconsistencies of the kind fixed in Phases 6 and 9.
