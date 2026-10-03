@@ -1,0 +1,40 @@
+# EcoTrack backend dependencies (fully pinned, including transitives).
+#
+# pyproject.toml is the source of truth (AUDIT.md C3). Regenerate this file after
+# changing dependencies there:
+#
+#   uv export --format requirements-txt --no-hashes --no-emit-project --extra postgres -o requirements.txt
+#
+# Install without uv:  pip install -r requirements.txt
+# psycopg is only needed when DATABASE_URL points at PostgreSQL; SQLite is the fallback.
+
+asgiref==3.12.1
+    # via
+    #   django
+    #   django-cors-headers
+dj-database-url==3.1.2
+    # via backend
+django==5.2.17
+    # via
+    #   backend
+    #   dj-database-url
+    #   django-cors-headers
+    #   djangorestframework
+django-cors-headers==4.9.0
+    # via backend
+djangorestframework==3.18.1
+    # via backend
+psycopg==3.3.6
+    # via backend
+psycopg-binary==3.3.6 ; implementation_name != 'pypy'
+    # via psycopg
+python-dotenv==1.2.4
+    # via backend
+sqlparse==0.6.0
+    # via django
+typing-extensions==4.16.0 ; python_full_version < '3.13'
+    # via psycopg
+tzdata==2026.4 ; sys_platform == 'win32'
+    # via
+    #   django
+    #   psycopg

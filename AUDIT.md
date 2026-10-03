@@ -93,8 +93,8 @@ unmodified Vite template. The repo is a fresh two-folder scaffold, not a partial
 | --- | --- | --- |
 | C1 | Plan says **React 18**; repo has **React 19.2** | **Keep React 19.** Newer, working, and not a different framework. Recharts / Framer Motion / Leaflet / react-router all support React 19. |
 | C2 | Plan implies **JavaScript** (`.jsx`); repo is **TypeScript** (`.tsx`, `tsc -b` in the build) | **Keep TypeScript.** All new frontend files will be `.ts`/`.tsx`. |
-| C3 | Plan says `requirements.txt`; repo uses **`uv` + `pyproject.toml`** | Maintain `pyproject.toml` as the source of truth and also emit a `requirements.txt` in Phase 2 (Docker/CI in Phase 25 and the plan's Check commands expect it). Both must stay in sync. |
-| C4 | `backend/.python-version` pins **3.13**; local interpreter is **3.12.2** | Open question Q1 below. TensorFlow wheel availability on 3.13 is the real risk. |
+| C3 | Plan says `requirements.txt`; repo uses **`uv` + `pyproject.toml`** | **Resolved in Phase 2.** `pyproject.toml` is the source of truth; `requirements.txt` is generated from it with `uv export` (command recorded in the file's header and in `backend/README.md`). |
+| C4 | `backend/.python-version` pins **3.13**; local interpreter is **3.12.2** | **Resolved in Phase 2.** `.python-version` set to `3.12` and `requires-python` relaxed to `>=3.12`, matching the installed interpreter and keeping TensorFlow wheels available for Phase 11. |
 | C5 | Plan's Check commands use bare `python manage.py …`; repo convention is `uv run` | Phase 2 will create a real `manage.py` so the plan's commands work verbatim; `uv run python manage.py …` remains the equivalent. |
 | C6 | Plan's Phase 1 (`CFT-WORKFLOW.md` version) says "scaffold from empty repo" | `CLAUDE-plan.md` supersedes it — the repo is not empty. `CFT-WORKFLOW.md` is kept as the original reference only. |
 | C7 | Plan names no styling layer in the repo; repo has **plain CSS**, no Tailwind | Add Tailwind in Phase 3 **alongside** the existing CSS; do not delete `App.css` / `index.css`. |
@@ -106,11 +106,8 @@ No conflict contradicts the Mission, so no phase is blocked by the above.
 
 ## 6. Open questions
 
-- **Q1 — Python version.** `.python-version` asks for 3.13 but 3.12.2 is installed. TensorFlow/Keras
-  (Phases 11, 23) has historically lagged on the newest Python. Options: pin the project to 3.12, or
-  keep 3.13 and fall back to a scikit-learn-only forecaster. *Default if unanswered:* relax
-  `requires-python` to `>=3.12` and use whichever interpreter resolves, falling back per the
-  "No GPU / small LSTM" rule.
+- **Q1 — Python version. RESOLVED (Phase 2).** Applied the stated default: `.python-version` is now
+  `3.12` and `requires-python` is `>=3.12`. `uv sync` built `backend/.venv` on CPython 3.12.2.
 - **Q2 — Database.** No Postgres was detected. *Default:* SQLite via the plan's documented fallback;
   `DATABASE_URL` still honoured when present.
 - **Q3 — External keys.** No Gemini / Whisper / Earth Engine credentials present. *Default:* mock
@@ -129,3 +126,16 @@ Created: `AUDIT.md`, `PROGRESS.md`, `BACKLOG.md`, root `.gitignore`, and `.gitke
 the 22 missing layout folders.
 Modified: `README.md` only (a "Project plan" section appended below the existing title lines).
 Deleted / renamed: **nothing**.
+
+---
+
+## 8. Phase 2 changes to the repo
+
+Created in `backend/`: `manage.py`, `config/{settings,urls,views,wsgi,asgi,tests}.py`,
+`config/__init__.py`, `requirements.txt`, `.env.example`.
+Modified in `backend/`: `pyproject.toml` (Django/DRF/CORS dependencies, `requires-python >=3.12`,
+`[tool.uv] package = false`), `.python-version` (3.13 -> 3.12), `README.md` (was 0 bytes, now the
+backend setup guide).
+Deleted / renamed: **nothing** — `backend/main.py` is left in place, unused (conflict C8).
+Untracked build output: `backend/.venv/`, `backend/db.sqlite3`, `backend/uv.lock` — the first two are
+covered by `.gitignore`; `uv.lock` is intentionally committable for reproducible installs.

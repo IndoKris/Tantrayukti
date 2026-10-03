@@ -1,7 +1,22 @@
 [project]
 name = "backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "EcoTrack backend - energy, cost and CO2 monitoring API (Django + DRF)"
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
+# Relaxed from ">=3.13" (see AUDIT.md Q1): 3.12 is the interpreter available here and
+# has the widest TensorFlow/Keras wheel coverage for the Phase 11 forecasting work.
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.0,<6.0",
+    "djangorestframework>=3.15",
+    "django-cors-headers>=4.4",
+    "dj-database-url>=2.2",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+# Only needed when DATABASE_URL points at PostgreSQL; SQLite is the documented fallback.
+postgres = ["psycopg[binary]>=3.2"]
+
+[tool.uv]
+package = false

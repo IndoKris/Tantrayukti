@@ -6,7 +6,7 @@ Status values: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | # | Phase | Part | Status | Summary |
 | --- | --- | --- | --- | --- |
 | 1 | Audit existing repo and add tracking | A Foundation | DONE | Audited repo (empty uv backend, React 19 + TS Vite frontend); added AUDIT/PROGRESS/BACKLOG, root .gitignore, layout folders, README plan section. |
-| 2 | Backend skeleton | A Foundation | TODO | |
+| 2 | Backend skeleton | A Foundation | DONE | Django 5.2 + DRF + CORS in `config/`, env-driven settings with SQLite fallback, requirements.txt, .env.example, `GET /api/health/`; 8 tests pass. |
 | 3 | Frontend skeleton | A Foundation | TODO | |
 | 4 | Auth and roles | A Foundation | TODO | |
 | 5 | Spaces hierarchy | A Foundation | TODO | |
