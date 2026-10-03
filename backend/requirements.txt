@@ -1,18 +1,18 @@
 # EcoTrack backend dependencies (fully pinned, including transitives).
 #
-# pyproject.toml is the source of truth (AUDIT.md C3). Regenerate this file after
-# changing dependencies there:
-#
+# pyproject.toml is the source of truth (AUDIT.md C3). Regenerate after changing it:
 #   uv export --format requirements-txt --no-hashes --no-emit-project --extra postgres --extra ml -o requirements.txt
 #
-# Install without uv:  pip install -r requirements.txt
-# psycopg is only needed when DATABASE_URL points at PostgreSQL; SQLite is the fallback.
-# pandas/numpy come from the [ml] extra and are only needed for the ml/ pipeline.
+# Extras: [postgres] only when DATABASE_URL points at PostgreSQL; [ml] for the ml/
+# pipeline; [deep] adds TensorFlow for the actual stacked LSTM (not installed here -
+# the training code falls back to a labelled sklearn MLP, see ml/training/backends.py).
 
 asgiref==3.12.1
     # via
     #   django
     #   django-cors-headers
+cloudpickle==3.1.2
+    # via joblib
 dj-database-url==3.1.2
     # via backend
 django==5.2.17
@@ -30,10 +30,18 @@ djangorestframework==3.18.1
     #   djangorestframework-simplejwt
 djangorestframework-simplejwt==5.5.1
     # via backend
+joblib==1.6.0
+    # via
+    #   backend
+    #   scikit-learn
+narwhals==2.26.0
+    # via scikit-learn
 numpy==2.5.3
     # via
     #   backend
     #   pandas
+    #   scikit-learn
+    #   scipy
 pandas==3.0.6
     # via backend
 psycopg==3.3.6
@@ -46,10 +54,16 @@ python-dateutil==2.9.0.post0
     # via pandas
 python-dotenv==1.2.4
     # via backend
+scikit-learn==1.9.1
+    # via backend
+scipy==1.18.1
+    # via scikit-learn
 six==1.17.0
     # via python-dateutil
 sqlparse==0.6.0
     # via django
+threadpoolctl==3.7.0
+    # via scikit-learn
 typing-extensions==4.16.0 ; python_full_version < '3.13'
     # via psycopg
 tzdata==2026.4 ; sys_platform == 'emscripten' or sys_platform == 'win32'

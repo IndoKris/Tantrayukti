@@ -1,0 +1,74 @@
+# EcoTrack: database, backend API and frontend.
+#
+#   docker compose up --build
+#   docker compose exec backend python manage.py migrate
+#   docker compose exec backend python manage.py seed_spaces
+#   docker compose exec backend python manage.py createsuperuser
+#
+# The frontend is served on http://localhost:8080 and proxies /api to the
+# backend, so the browser sees one origin and CORS never applies.
+
+name: ecotrack
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ecotrack}
+      POSTGRES_USER: ${POSTGRES_USER:-ecotrack}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecotrack-dev-password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # Not published by default: the database has no business being reachable
+    # from the host. Uncomment to inspect it with a local client.
+    # ports:
+    #   - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecotrack} -d ${POSTGRES_DB:-ecotrack}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      # Set DATABASE_URL and the project uses Postgres; leave it empty and it
+      # falls back to SQLite (see backend/config/settings.py).
+      DATABASE_URL: postgres://${POSTGRES_USER:-ecotrack}:${POSTGRES_PASSWORD:-ecotrack-dev-password}@db:5432/${POSTGRES_DB:-ecotrack}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-compose-dev-only-change-me}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DJANGO_CORS_ALLOWED_ORIGINS: ${DJANGO_CORS_ALLOWED_ORIGINS:-http://localhost:8080}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:8080}
+      ECOTRACK_ENVIRONMENT: docker-compose
+    volumes:
+      # ML artifacts persist across rebuilds: metrics.json is the single source
+      # of every figure the UI shows, and losing it on a rebuild would blank the
+      # metrics page.
+      - ml-artifacts:/app/ml/artifacts
+    depends_on:
+      db:
+        condition: service_healthy
+    # Not published: the frontend's nginx proxies to it over the compose network.
+    # Uncomment to call the API directly during development.
+    # ports:
+    #   - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Empty, so the bundle calls same-origin /api and nginx proxies it.
+        VITE_API_BASE_URL: ""
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  ml-artifacts:

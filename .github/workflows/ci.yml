@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (Django + ML)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # Matches backend/.python-version; see AUDIT.md Q1 for why not 3.13.
+      - name: Set up Python
+        run: uv python install 3.12
+
+      # The [deep] extra (TensorFlow) is deliberately omitted: it is a 335 MB
+      # download and the training code falls back to a labelled sklearn model
+      # without it. CI checks the pipeline, not the LSTM.
+      - name: Install dependencies
+        working-directory: backend
+        run: uv sync --extra ml
+
+      - name: Django system checks
+        working-directory: backend
+        run: uv run python manage.py check
+
+      - name: Check for missing migrations
+        working-directory: backend
+        # A model change without a migration passes the tests and then breaks a
+        # deploy, so it fails here instead.
+        run: uv run python manage.py makemigrations --check --dry-run
+
+      - name: Run tests
+        working-directory: backend
+        run: uv run python manage.py test --verbosity 2
+
+      # --- The ML pipeline, end to end on the small preset ---
+      - name: Prepare datasets
+        working-directory: backend
+        # --synthetic so CI never depends on the UCI archive being reachable.
+        run: uv run python -m ml.data.prepare --small --synthetic
+
+      - name: Train the forecaster
+        working-directory: backend
+        run: uv run python -m ml.training.train_lstm --small
+
+      - name: Train the emission-factor model
+        working-directory: backend
+        run: uv run python -m ml.training.train_emission_rf --small
+
+      - name: Fit the CO2 trend
+        working-directory: backend
+        run: uv run python -m ml.training.train_co2_trend
+
+      - name: Run the NILM detector
+        working-directory: backend
+        run: uv run python -m ml.training.train_nilm --small
+
+      - name: Evaluate and write metrics.json
+        working-directory: backend
+        run: uv run python -m ml.evaluation.evaluate_all
+
+      - name: Generate the ML evaluation document
+        run: cd backend && uv run python -m ml.evaluation.report
+
+      - name: Upload metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: ml-metrics
+          path: |
+            backend/ml/artifacts/metrics.json
+            docs/ML_EVALUATION.md
+
+  simulator:
+    name: Simulator (stdlib only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No install step: the simulator is stdlib-only by design, and running it
+      # on a bare interpreter is what proves that.
+      - name: Dry run
+        run: python simulator/run.py --days 7 --dry-run
+
+      - name: Dry run with faults injected
+        run: >
+          python simulator/run.py --days 14
+          --fault ac-left-on --fault night-load --fault baseload-jump --dry-run
+
+      - name: Reproducibility
+        run: |
+          python simulator/run.py --days 3 --start 2026-09-01T00:00:00Z --csv /tmp/a.csv
+          python simulator/run.py --days 3 --start 2026-09-01T00:00:00Z --csv /tmp/b.csv
+          cmp /tmp/a.csv /tmp/b.csv
+          echo "Byte-identical across runs."
+
+  frontend:
+    name: Frontend (lint + typecheck + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      # `npm run build` is `tsc -b && vite build`, so this covers typechecking.
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  compose:
+    name: Compose config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet && echo "compose config is valid"

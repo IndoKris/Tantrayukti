@@ -3,7 +3,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from telemetry.views import DeviceViewSet, ReadingIngestView, UsageView
+from telemetry.views import ChatIngestView, DeviceViewSet, ReadingIngestView, UsageView
 
 app_name = "telemetry"
 
@@ -15,5 +15,6 @@ urlpatterns = [
     # it is baked into the ESP32 firmware in Phase 24.
     path("readings/", ReadingIngestView.as_view(), name="reading-ingest"),
     path("usage/", UsageView.as_view(), name="usage"),
+    path("ingest/chat/", ChatIngestView.as_view(), name="chat-ingest"),
     path("", include(router.urls)),
 ]

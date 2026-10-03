@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 import Community from './pages/Community.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 import Insights from './pages/Insights.tsx'
+import MlMetrics from './pages/MlMetrics.tsx'
 import Login from './pages/Login.tsx'
 import NotFound from './pages/NotFound.tsx'
 import Profile from './pages/Profile.tsx'
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
           { index: true, element: <Dashboard /> },
           { path: 'spaces', element: <Spaces /> },
           { path: 'insights', element: <Insights /> },
+          { path: 'insights/metrics', element: <MlMetrics /> },
           { path: 'reports', element: <Reports /> },
           { path: 'community', element: <Community /> },
           { path: 'profile', element: <Profile /> },

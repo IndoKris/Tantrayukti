@@ -21,6 +21,14 @@ dependencies = [
 ml = [
     "pandas>=2.2",
     "numpy>=1.26",
+    "scikit-learn>=1.5",
+    "joblib>=1.4",
+]
+# Keras/TensorFlow is a separate extra: it is a large download, and the training
+# code falls back to a scikit-learn model when it is absent (see
+# ml/training/backends.py). Install with: uv sync --extra ml --extra deep
+deep = [
+    "tensorflow>=2.16",
 ]
 
 # Only needed when DATABASE_URL points at PostgreSQL; SQLite is the documented fallback.

@@ -1,0 +1,241 @@
+{
+  "model": "Linear CO2 trend with prediction interval",
+  "created_by": "ml/training/train_co2_trend.py",
+  "created_at": "2026-10-03T09:32:46+00:00",
+  "unit": "kg CO2 per kWh (daily mean)",
+  "fit": {
+    "slope_per_day": -0.000315399,
+    "intercept": 0.859205,
+    "r2": 0.661225,
+    "p_value": 0.0,
+    "is_significant": true,
+    "alpha": 0.05,
+    "n_days": 180,
+    "residual_std": 0.011796,
+    "direction": "falling"
+  },
+  "projection": {
+    "horizon_days": 30,
+    "points": [
+      {
+        "x": 180.0,
+        "predicted": 0.802433,
+        "lower": 0.778895,
+        "upper": 0.825971,
+        "date": "2024-06-29"
+      },
+      {
+        "x": 181.0,
+        "predicted": 0.802118,
+        "lower": 0.778576,
+        "upper": 0.82566,
+        "date": "2024-06-30"
+      },
+      {
+        "x": 182.0,
+        "predicted": 0.801802,
+        "lower": 0.778256,
+        "upper": 0.825349,
+        "date": "2024-07-01"
+      },
+      {
+        "x": 183.0,
+        "predicted": 0.801487,
+        "lower": 0.777936,
+        "upper": 0.825038,
+        "date": "2024-07-02"
+      },
+      {
+        "x": 184.0,
+        "predicted": 0.801171,
+        "lower": 0.777616,
+        "upper": 0.824727,
+        "date": "2024-07-03"
+      },
+      {
+        "x": 185.0,
+        "predicted": 0.800856,
+        "lower": 0.777296,
+        "upper": 0.824416,
+        "date": "2024-07-04"
+      },
+      {
+        "x": 186.0,
+        "predicted": 0.800541,
+        "lower": 0.776976,
+        "upper": 0.824105,
+        "date": "2024-07-05"
+      },
+      {
+        "x": 187.0,
+        "predicted": 0.800225,
+        "lower": 0.776656,
+        "upper": 0.823794,
+        "date": "2024-07-06"
+      },
+      {
+        "x": 188.0,
+        "predicted": 0.79991,
+        "lower": 0.776336,
+        "upper": 0.823483,
+        "date": "2024-07-07"
+      },
+      {
+        "x": 189.0,
+        "predicted": 0.799594,
+        "lower": 0.776016,
+        "upper": 0.823173,
+        "date": "2024-07-08"
+      },
+      {
+        "x": 190.0,
+        "predicted": 0.799279,
+        "lower": 0.775696,
+        "upper": 0.822862,
+        "date": "2024-07-09"
+      },
+      {
+        "x": 191.0,
+        "predicted": 0.798964,
+        "lower": 0.775376,
+        "upper": 0.822551,
+        "date": "2024-07-10"
+      },
+      {
+        "x": 192.0,
+        "predicted": 0.798648,
+        "lower": 0.775056,
+        "upper": 0.822241,
+        "date": "2024-07-11"
+      },
+      {
+        "x": 193.0,
+        "predicted": 0.798333,
+        "lower": 0.774735,
+        "upper": 0.82193,
+        "date": "2024-07-12"
+      },
+      {
+        "x": 194.0,
+        "predicted": 0.798017,
+        "lower": 0.774415,
+        "upper": 0.82162,
+        "date": "2024-07-13"
+      },
+      {
+        "x": 195.0,
+        "predicted": 0.797702,
+        "lower": 0.774095,
+        "upper": 0.821309,
+        "date": "2024-07-14"
+      },
+      {
+        "x": 196.0,
+        "predicted": 0.797387,
+        "lower": 0.773774,
+        "upper": 0.820999,
+        "date": "2024-07-15"
+      },
+      {
+        "x": 197.0,
+        "predicted": 0.797071,
+        "lower": 0.773454,
+        "upper": 0.820689,
+        "date": "2024-07-16"
+      },
+      {
+        "x": 198.0,
+        "predicted": 0.796756,
+        "lower": 0.773133,
+        "upper": 0.820378,
+        "date": "2024-07-17"
+      },
+      {
+        "x": 199.0,
+        "predicted": 0.79644,
+        "lower": 0.772813,
+        "upper": 0.820068,
+        "date": "2024-07-18"
+      },
+      {
+        "x": 200.0,
+        "predicted": 0.796125,
+        "lower": 0.772492,
+        "upper": 0.819758,
+        "date": "2024-07-19"
+      },
+      {
+        "x": 201.0,
+        "predicted": 0.79581,
+        "lower": 0.772172,
+        "upper": 0.819448,
+        "date": "2024-07-20"
+      },
+      {
+        "x": 202.0,
+        "predicted": 0.795494,
+        "lower": 0.771851,
+        "upper": 0.819138,
+        "date": "2024-07-21"
+      },
+      {
+        "x": 203.0,
+        "predicted": 0.795179,
+        "lower": 0.77153,
+        "upper": 0.818828,
+        "date": "2024-07-22"
+      },
+      {
+        "x": 204.0,
+        "predicted": 0.794863,
+        "lower": 0.771209,
+        "upper": 0.818518,
+        "date": "2024-07-23"
+      },
+      {
+        "x": 205.0,
+        "predicted": 0.794548,
+        "lower": 0.770889,
+        "upper": 0.818208,
+        "date": "2024-07-24"
+      },
+      {
+        "x": 206.0,
+        "predicted": 0.794233,
+        "lower": 0.770568,
+        "upper": 0.817898,
+        "date": "2024-07-25"
+      },
+      {
+        "x": 207.0,
+        "predicted": 0.793917,
+        "lower": 0.770247,
+        "upper": 0.817588,
+        "date": "2024-07-26"
+      },
+      {
+        "x": 208.0,
+        "predicted": 0.793602,
+        "lower": 0.769926,
+        "upper": 0.817278,
+        "date": "2024-07-27"
+      },
+      {
+        "x": 209.0,
+        "predicted": 0.793286,
+        "lower": 0.769605,
+        "upper": 0.816968,
+        "date": "2024-07-28"
+      }
+    ]
+  },
+  "data_provenance": {
+    "dataset": "Synthetic grid emission factor",
+    "is_synthetic": true
+  },
+  "caveats": [
+    "Ordinary least squares on daily means. A straight line cannot represent seasonality; the prediction interval widens with distance from the data.",
+    "The interval is a prediction interval (for a new observation), not a narrower confidence interval for the mean.",
+    "TRAINED ON SYNTHETIC DATA - no real grid CO2 series is used here."
+  ]
+}

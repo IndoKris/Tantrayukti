@@ -18,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import IsManagerOrAbove
-from billing import engines
+from billing import engines, ml_factors
 from billing.models import BillingSettings, EmissionFactor, Tariff, TariffSlab, TimeOfUseRate
 from billing.serializers import (
     BillingSettingsSerializer,
@@ -178,15 +178,41 @@ class BillEstimateView(_ScopedEnergyView):
             include_fixed_charge=include_fixed,
         )
         emissions = engines.estimate_co2(context["total_kwh"], context["factor"])
+        payload = {
+            **self.energy_block(context),
+            "window_days": round(window_days, 3),
+            "cost": bill.as_dict(),
+            "co2": emissions.as_dict(),
+        }
 
-        return Response(
-            {
-                **self.energy_block(context),
-                "window_days": round(window_days, 3),
-                "cost": bill.as_dict(),
-                "co2": emissions.as_dict(),
+        # Optional Phase 12 hourly modelled factor. The static factor above stays
+        # the default and the response always says which was applied.
+        if request.query_params.get("emission_model") == "rf":
+            payload["co2_modelled"] = self._modelled_co2(context)
+
+        return Response(payload)
+
+    @staticmethod
+    def _modelled_co2(context) -> dict:
+        """Hourly modelled CO2, or an explanation of why the static factor stands."""
+        hourly = context["hourly_kwh"]
+        if not hourly:
+            return {
+                "applied": "static",
+                "reason": "No hourly breakdown in this window, so the hourly "
+                "model cannot be applied. The static factor above stands.",
             }
-        )
+        try:
+            result = ml_factors.modelled_co2(
+                hourly, month=context["start"].month, day_of_week=context["start"].weekday()
+            )
+        except ml_factors.EmissionModelUnavailable as error:
+            return {
+                "applied": "static",
+                "reason": str(error),
+                "note": "The static factor above stands; nothing was substituted.",
+            }
+        return result
 
 
 class MonthProjectionView(_ScopedEnergyView):

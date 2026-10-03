@@ -1,0 +1,220 @@
+{
+  "name": "EcoTrack chat ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ecotrack-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-640, 300],
+      "webhookId": "ecotrack-chat"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "version": 2 },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.modality }}",
+                    "rightValue": "text",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "version": 2 },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.modality }}",
+                    "rightValue": "image",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "image"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "version": 2 },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.modality }}",
+                    "rightValue": "audio",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "switch-modality",
+      "name": "Switch on modality",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [-420, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "payload",
+              "value": "={{ { device: $json.body.device, modality: 'text', text: $json.body.text, occurred_on: $json.body.occurred_on } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "build-text",
+      "name": "Build text payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-180, 120]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "payload",
+              "value": "={{ { device: $json.body.device, modality: 'image', image_url: $json.body.image_url } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "build-image",
+      "name": "Build image payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-180, 300],
+      "notes": "EcoTrack declines image input unless a vision provider is configured. It returns 422 with a reason rather than inventing a reading."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "payload",
+              "value": "={{ { device: $json.body.device, modality: 'audio', audio_url: $json.body.audio_url } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "build-audio",
+      "name": "Build audio payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-180, 480],
+      "notes": "EcoTrack declines audio input unless a speech provider is configured. It returns 422 with a reason rather than inventing a reading."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ECOTRACK_API_URL }}/api/ingest/chat/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": { "response": { "response": { "neverError": true, "fullResponse": true } } }
+      },
+      "id": "ingest",
+      "name": "POST /api/ingest/chat/",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [80, 300],
+      "notes": "Uses an httpHeaderAuth credential holding 'Authorization: Bearer <JWT>'. neverError is on so a 422 is handled as a reply rather than a workflow failure."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r1",
+              "name": "reply",
+              "value": "={{ $json.statusCode === 201 ? ('Logged ' + $json.body.extraction.energy_kwh + ' kWh for ' + $json.body.device.name + ' across ' + $json.body.stored + ' interval(s). ' + $json.body.assumptions[0]) : ('Could not log that: ' + ($json.body.detail || 'unknown error') + ' ' + (($json.body.extraction && $json.body.extraction.reason) || '') + ' ' + ((($json.body.problems || []).join(' ')))) }}",
+              "type": "string"
+            },
+            {
+              "id": "r2",
+              "name": "ok",
+              "value": "={{ $json.statusCode === 201 }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "build-reply",
+      "name": "Build reply",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [300, 300],
+      "notes": "The reply quotes the API's own extraction and assumptions, so the user sees what was actually stored and on what basis - never a cheerful confirmation of a value the server rejected."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: $json.ok, reply: $json.reply }) }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond to webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Switch on modality", "type": "main", "index": 0 }]] },
+    "Switch on modality": {
+      "main": [
+        [{ "node": "Build text payload", "type": "main", "index": 0 }],
+        [{ "node": "Build image payload", "type": "main", "index": 0 }],
+        [{ "node": "Build audio payload", "type": "main", "index": 0 }],
+        [{ "node": "Build text payload", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build text payload": { "main": [[{ "node": "POST /api/ingest/chat/", "type": "main", "index": 0 }]] },
+    "Build image payload": { "main": [[{ "node": "POST /api/ingest/chat/", "type": "main", "index": 0 }]] },
+    "Build audio payload": { "main": [[{ "node": "POST /api/ingest/chat/", "type": "main", "index": 0 }]] },
+    "POST /api/ingest/chat/": { "main": [[{ "node": "Build reply", "type": "main", "index": 0 }]] },
+    "Build reply": { "main": [[{ "node": "Respond to webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": {
+    "description": "Receives a chat message, routes it by modality, posts it to EcoTrack's chat-ingestion endpoint, and replies with what was actually stored. The fallback branch of the switch treats an unknown modality as text.",
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [{ "name": "ecotrack" }]
+}

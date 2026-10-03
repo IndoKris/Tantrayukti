@@ -1,0 +1,779 @@
+{
+  "schema": 1,
+  "generated_at": "2026-10-03T11:18:11+00:00",
+  "generated_by": "ml/evaluation/evaluate_all.py",
+  "honesty_note": "Every metric shown in the EcoTrack UI or docs comes from this file. Nothing here is hand-written. Regression results are error metrics, never accuracy.",
+  "load_forecast": {
+    "status": "evaluated",
+    "evaluated_at": "2026-10-03T11:18:12+00:00",
+    "model": {
+      "architecture": "MLPRegressor (128, 64) over the flattened lookback window. FALLBACK - not an LSTM; Keras/TensorFlow was unavailable.",
+      "backend": "sklearn-mlp",
+      "is_fallback": true,
+      "backend_note": "FALLBACK MODEL. Keras unavailable (ModuleNotFoundError: No module named 'keras'). An MLP over the flattened lookback window was trained instead of the specified stacked LSTM. Scores from this backend must not be reported as LSTM results. Install with `uv sync --extra ml --extra deep` to train the LSTM.",
+      "preset": "small"
+    },
+    "data": {
+      "dataset": "UCI Individual household electric power consumption",
+      "is_synthetic": false,
+      "source": "UCI Machine Learning Repository, dataset 235 (archive.ics.uci.edu/dataset/235). Measurements from a single household in Sceaux, near Paris, at 1-minute resolution, December 2006 to November 2010.",
+      "rows": 1999,
+      "first_timestamp": "2006-12-16 18:00:00",
+      "last_timestamp": "2007-03-10 00:00:00",
+      "test_windows": 277
+    },
+    "target": {
+      "name": "energy_kwh",
+      "unit": "kWh per hour"
+    },
+    "one_step": {
+      "model": {
+        "label": "One hour ahead",
+        "n": 277,
+        "mae": 0.765185,
+        "rmse": 1.041462,
+        "mape_percent": 158.7861,
+        "mape_rows_excluded": 0,
+        "r2": -0.043574,
+        "actual_mean": 0.867198,
+        "predicted_mean": 1.003428,
+        "note": "Error metrics, not accuracy. Units match the target (kWh)."
+      },
+      "baselines": {
+        "persistence": {
+          "label": "Persistence: last observed value repeated",
+          "n": 277,
+          "mae": 0.596311,
+          "rmse": 1.17857,
+          "mape_percent": 35.3815,
+          "mape_rows_excluded": 0,
+          "r2": -0.336433,
+          "actual_mean": 0.867198,
+          "predicted_mean": 0.275867,
+          "note": "Error metrics, not accuracy. Units match the target (kWh)."
+        },
+        "seasonal_naive": {
+          "label": "Seasonal naive: same hour 24 h earlier",
+          "n": 277,
+          "mae": 0.91114,
+          "rmse": 1.196518,
+          "mape_percent": 206.8468,
+          "mape_rows_excluded": 0,
+          "r2": -0.377445,
+          "actual_mean": 0.867198,
+          "predicted_mean": 1.249195,
+          "note": "Error metrics, not accuracy. Units match the target (kWh)."
+        },
+        "train_mean": {
+          "label": "Training-set mean",
+          "n": 277,
+          "mae": 1.17261,
+          "rmse": 1.287314,
+          "mape_percent": 309.9806,
+          "mape_rows_excluded": 0,
+          "r2": -0.594429,
+          "actual_mean": 0.867198,
+          "predicted_mean": 1.653215,
+          "note": "Error metrics, not accuracy. Units match the target (kWh)."
+        }
+      },
+      "skill_vs_baselines": {
+        "persistence": {
+          "mae_improvement_percent": -28.32,
+          "rmse_improvement_percent": 11.633,
+          "beats_baseline_on_mae": false
+        },
+        "seasonal_naive": {
+          "mae_improvement_percent": 16.019,
+          "rmse_improvement_percent": 12.959,
+          "beats_baseline_on_mae": true
+        },
+        "train_mean": {
+          "mae_improvement_percent": 34.745,
+          "rmse_improvement_percent": 19.098,
+          "beats_baseline_on_mae": true
+        }
+      }
+    },
+    "recursive_24h": {
+      "status": "evaluated",
+      "forecasts_issued": 12,
+      "horizon_hours": 24,
+      "model": {
+        "label": "24 hours ahead, recursive",
+        "n": 288,
+        "mae": 0.964256,
+        "rmse": 1.250342,
+        "mape_percent": 214.725,
+        "mape_rows_excluded": 0,
+        "r2": -0.539707,
+        "actual_mean": 0.837132,
+        "predicted_mean": 1.061111,
+        "note": "Error metrics, not accuracy. Units match the target (kWh)."
+      },
+      "baselines": {
+        "persistence": {
+          "label": "Persistence: last observed value repeated",
+          "n": 288,
+          "mae": 0.574979,
+          "rmse": 1.159554,
+          "mape_percent": 34.8077,
+          "mape_rows_excluded": 0,
+          "r2": -0.324226,
+          "actual_mean": 0.837132,
+          "predicted_mean": 0.263367,
+          "note": "Error metrics, not accuracy. Units match the target (kWh)."
+        },
+        "seasonal_naive": {
+          "label": "Seasonal naive: same hour 24 h earlier",
+          "n": 288,
+          "mae": 0.596887,
+          "rmse": 1.146796,
+          "mape_percent": 47.3149,
+          "mape_rows_excluded": 0,
+          "r2": -0.295247,
+          "actual_mean": 0.837132,
+          "predicted_mean": 0.336844,
+          "note": "Error metrics, not accuracy. Units match the target (kWh)."
+        },
+        "train_mean": {
+          "label": "Training-set mean",
+          "n": 288,
+          "mae": 1.16663,
+          "rmse": 1.277221,
+          "mape_percent": 315.654,
+          "mape_rows_excluded": 0,
+          "r2": -0.606616,
+          "actual_mean": 0.837132,
+          "predicted_mean": 1.621946,
+          "note": "Error metrics, not accuracy. Units match the target (kWh)."
+        }
+      },
+      "skill_vs_baselines": {
+        "persistence": {
+          "mae_improvement_percent": -67.703,
+          "rmse_improvement_percent": -7.83,
+          "beats_baseline_on_mae": false
+        },
+        "seasonal_naive": {
+          "mae_improvement_percent": -61.547,
+          "rmse_improvement_percent": -9.029,
+          "beats_baseline_on_mae": false
+        },
+        "train_mean": {
+          "mae_improvement_percent": 17.347,
+          "rmse_improvement_percent": 2.104,
+          "beats_baseline_on_mae": true
+        }
+      },
+      "note": "This is the horizon the dashboard displays. Error is higher than the one-step figure because each prediction is fed back as input."
+    },
+    "caveats": [
+      "FALLBACK BACKEND: these are not results for the stacked LSTM the plan specifies. Keras/TensorFlow was unavailable at training time, so an MLP over the flattened lookback window was trained instead.",
+      "All figures are error metrics (MAE, RMSE, MAPE, R2), never accuracy.",
+      "MAPE excludes actuals below 0.001 kWh; the excluded row count is reported alongside it.",
+      "The scaler was fit on the training split only.",
+      "The split is chronological, never random."
+    ]
+  },
+  "emission_factor_model": {
+    "status": "evaluated",
+    "title": "Hourly grid emission factor (random forest)",
+    "model": "Hourly grid emission factor (random forest)",
+    "created_by": "ml/training/train_emission_rf.py",
+    "created_at": "2026-10-03T09:32:45+00:00",
+    "preset": "small",
+    "hyperparameters": {
+      "n_estimators": 60,
+      "max_depth": 12,
+      "max_rows": 4320,
+      "n_splits": 3
+    },
+    "features": [
+      "hour",
+      "month",
+      "day_of_week",
+      "is_weekend",
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "load_mw"
+    ],
+    "target": {
+      "name": "kg_co2_per_kwh",
+      "unit": "kg CO2 per kWh"
+    },
+    "cross_validation": {
+      "strategy": "TimeSeriesSplit",
+      "n_splits": 3,
+      "why": "Random folds would train on hours later than the hours they validate on, leaking the future.",
+      "folds": [
+        {
+          "fold": 1,
+          "model": {
+            "label": "fold 1",
+            "n": 1080,
+            "mae": 0.015077,
+            "rmse": 0.018889,
+            "mape_percent": 1.8573,
+            "mape_rows_excluded": 0,
+            "r2": 0.981898,
+            "actual_mean": 0.830565,
+            "predicted_mean": 0.838964,
+            "note": "Error metrics, not accuracy. Units match the target (kWh)."
+          },
+          "train_mean_baseline": {
+            "label": "fold 1 train-mean baseline",
+            "n": 1080,
+            "mae": 0.118659,
+            "rmse": 0.142882,
+            "mape_percent": 16.1322,
+            "mape_rows_excluded": 0,
+            "r2": -0.035728,
+            "actual_mean": 0.830565,
+            "predicted_mean": 0.857103,
+            "note": "Error metrics, not accuracy. Units match the target (kWh)."
+          }
+        },
+        {
+          "fold": 2,
+          "model": {
+            "label": "fold 2",
+            "n": 1080,
+            "mae": 0.017868,
+            "rmse": 0.021772,
+            "mape_percent": 2.1912,
+            "mape_rows_excluded": 0,
+            "r2": 0.97495,
+            "actual_mean": 0.822742,
+            "predicted_mean": 0.807333,
+            "note": "Error metrics, not accuracy. Units match the target (kWh)."
+          },
+          "train_mean_baseline": {
+            "label": "fold 2 train-mean baseline",
+            "n": 1080,
+            "mae": 0.118081,
+            "rmse": 0.13917,
+            "mape_percent": 16.097,
+            "mape_rows_excluded": 0,
+            "r2": -0.023509,
+            "actual_mean": 0.822742,
+            "predicted_mean": 0.843834,
+            "note": "Error metrics, not accuracy. Units match the target (kWh)."
+          }
+        },
+        {
+          "fold": 3,
+          "model": {
+            "label": "fold 3",
+            "n": 1080,
+            "mae": 0.024301,
+            "rmse": 0.0289,
+            "mape_percent": 3.0432,
+            "mape_rows_excluded": 0,
+            "r2": 0.955627,
+            "actual_mean": 0.813497,
+            "predicted_mean": 0.832625,
+            "note": "Error metrics, not accuracy. Units match the target (kWh)."
+          },
+          "train_mean_baseline": {
+            "label": "fold 3 train-mean baseline",
+            "n": 1080,
+            "mae": 0.116556,
+            "rmse": 0.139162,
+            "mape_percent": 16.1312,
+            "mape_rows_excluded": 0,
+            "r2": -0.028857,
+            "actual_mean": 0.813497,
+            "predicted_mean": 0.836803,
+            "note": "Error metrics, not accuracy. Units match the target (kWh)."
+          }
+        }
+      ],
+      "mean_mae": 0.019082,
+      "mean_baseline_mae": 0.117765
+    },
+    "feature_importances": {
+      "hour_cos": 0.89771,
+      "hour": 0.05114,
+      "load_mw": 0.02469,
+      "hour_sin": 0.01299,
+      "month_cos": 0.00577,
+      "month": 0.0054,
+      "day_of_week": 0.00136,
+      "month_sin": 0.00066,
+      "is_weekend": 0.00028
+    },
+    "data_provenance": {
+      "dataset": "Synthetic grid emission factor",
+      "is_synthetic": true,
+      "source": "Generated by ml/data/synthetic.py. No downloadable hourly CO2 intensity series for the Indian grid is used by this project, so the Phase 12 random forest trains on a generated series."
+    },
+    "caveats": [
+      "TRAINED ON SYNTHETIC DATA. No real hourly grid CO2 intensity series is downloaded by this project, so this model learns the generator's assumptions, not the grid.",
+      "The Phase 9 CO2 engine keeps the static 0.82 kg/kWh factor as its default; this model is an explicitly-labelled option.",
+      "Error metrics only (MAE, RMSE, MAPE, R2), never accuracy."
+    ],
+    "artifacts": {
+      "model": "C:\\Users\\Suraj\\OneDrive\\Desktop\\Tantrayukti\\backend\\ml\\artifacts\\emission_rf.joblib"
+    }
+  },
+  "co2_trend": {
+    "status": "evaluated",
+    "title": "Linear CO2 trend with prediction interval",
+    "model": "Linear CO2 trend with prediction interval",
+    "created_by": "ml/training/train_co2_trend.py",
+    "created_at": "2026-10-03T09:32:46+00:00",
+    "unit": "kg CO2 per kWh (daily mean)",
+    "fit": {
+      "slope_per_day": -0.000315399,
+      "intercept": 0.859205,
+      "r2": 0.661225,
+      "p_value": 0.0,
+      "is_significant": true,
+      "alpha": 0.05,
+      "n_days": 180,
+      "residual_std": 0.011796,
+      "direction": "falling"
+    },
+    "projection": {
+      "horizon_days": 30,
+      "points": [
+        {
+          "x": 180.0,
+          "predicted": 0.802433,
+          "lower": 0.778895,
+          "upper": 0.825971,
+          "date": "2024-06-29"
+        },
+        {
+          "x": 181.0,
+          "predicted": 0.802118,
+          "lower": 0.778576,
+          "upper": 0.82566,
+          "date": "2024-06-30"
+        },
+        {
+          "x": 182.0,
+          "predicted": 0.801802,
+          "lower": 0.778256,
+          "upper": 0.825349,
+          "date": "2024-07-01"
+        },
+        {
+          "x": 183.0,
+          "predicted": 0.801487,
+          "lower": 0.777936,
+          "upper": 0.825038,
+          "date": "2024-07-02"
+        },
+        {
+          "x": 184.0,
+          "predicted": 0.801171,
+          "lower": 0.777616,
+          "upper": 0.824727,
+          "date": "2024-07-03"
+        },
+        {
+          "x": 185.0,
+          "predicted": 0.800856,
+          "lower": 0.777296,
+          "upper": 0.824416,
+          "date": "2024-07-04"
+        },
+        {
+          "x": 186.0,
+          "predicted": 0.800541,
+          "lower": 0.776976,
+          "upper": 0.824105,
+          "date": "2024-07-05"
+        },
+        {
+          "x": 187.0,
+          "predicted": 0.800225,
+          "lower": 0.776656,
+          "upper": 0.823794,
+          "date": "2024-07-06"
+        },
+        {
+          "x": 188.0,
+          "predicted": 0.79991,
+          "lower": 0.776336,
+          "upper": 0.823483,
+          "date": "2024-07-07"
+        },
+        {
+          "x": 189.0,
+          "predicted": 0.799594,
+          "lower": 0.776016,
+          "upper": 0.823173,
+          "date": "2024-07-08"
+        },
+        {
+          "x": 190.0,
+          "predicted": 0.799279,
+          "lower": 0.775696,
+          "upper": 0.822862,
+          "date": "2024-07-09"
+        },
+        {
+          "x": 191.0,
+          "predicted": 0.798964,
+          "lower": 0.775376,
+          "upper": 0.822551,
+          "date": "2024-07-10"
+        },
+        {
+          "x": 192.0,
+          "predicted": 0.798648,
+          "lower": 0.775056,
+          "upper": 0.822241,
+          "date": "2024-07-11"
+        },
+        {
+          "x": 193.0,
+          "predicted": 0.798333,
+          "lower": 0.774735,
+          "upper": 0.82193,
+          "date": "2024-07-12"
+        },
+        {
+          "x": 194.0,
+          "predicted": 0.798017,
+          "lower": 0.774415,
+          "upper": 0.82162,
+          "date": "2024-07-13"
+        },
+        {
+          "x": 195.0,
+          "predicted": 0.797702,
+          "lower": 0.774095,
+          "upper": 0.821309,
+          "date": "2024-07-14"
+        },
+        {
+          "x": 196.0,
+          "predicted": 0.797387,
+          "lower": 0.773774,
+          "upper": 0.820999,
+          "date": "2024-07-15"
+        },
+        {
+          "x": 197.0,
+          "predicted": 0.797071,
+          "lower": 0.773454,
+          "upper": 0.820689,
+          "date": "2024-07-16"
+        },
+        {
+          "x": 198.0,
+          "predicted": 0.796756,
+          "lower": 0.773133,
+          "upper": 0.820378,
+          "date": "2024-07-17"
+        },
+        {
+          "x": 199.0,
+          "predicted": 0.79644,
+          "lower": 0.772813,
+          "upper": 0.820068,
+          "date": "2024-07-18"
+        },
+        {
+          "x": 200.0,
+          "predicted": 0.796125,
+          "lower": 0.772492,
+          "upper": 0.819758,
+          "date": "2024-07-19"
+        },
+        {
+          "x": 201.0,
+          "predicted": 0.79581,
+          "lower": 0.772172,
+          "upper": 0.819448,
+          "date": "2024-07-20"
+        },
+        {
+          "x": 202.0,
+          "predicted": 0.795494,
+          "lower": 0.771851,
+          "upper": 0.819138,
+          "date": "2024-07-21"
+        },
+        {
+          "x": 203.0,
+          "predicted": 0.795179,
+          "lower": 0.77153,
+          "upper": 0.818828,
+          "date": "2024-07-22"
+        },
+        {
+          "x": 204.0,
+          "predicted": 0.794863,
+          "lower": 0.771209,
+          "upper": 0.818518,
+          "date": "2024-07-23"
+        },
+        {
+          "x": 205.0,
+          "predicted": 0.794548,
+          "lower": 0.770889,
+          "upper": 0.818208,
+          "date": "2024-07-24"
+        },
+        {
+          "x": 206.0,
+          "predicted": 0.794233,
+          "lower": 0.770568,
+          "upper": 0.817898,
+          "date": "2024-07-25"
+        },
+        {
+          "x": 207.0,
+          "predicted": 0.793917,
+          "lower": 0.770247,
+          "upper": 0.817588,
+          "date": "2024-07-26"
+        },
+        {
+          "x": 208.0,
+          "predicted": 0.793602,
+          "lower": 0.769926,
+          "upper": 0.817278,
+          "date": "2024-07-27"
+        },
+        {
+          "x": 209.0,
+          "predicted": 0.793286,
+          "lower": 0.769605,
+          "upper": 0.816968,
+          "date": "2024-07-28"
+        }
+      ]
+    },
+    "data_provenance": {
+      "dataset": "Synthetic grid emission factor",
+      "is_synthetic": true
+    },
+    "caveats": [
+      "Ordinary least squares on daily means. A straight line cannot represent seasonality; the prediction interval widens with distance from the data.",
+      "The interval is a prediction interval (for a new observation), not a narrower confidence interval for the mean.",
+      "TRAINED ON SYNTHETIC DATA - no real grid CO2 series is used here."
+    ]
+  },
+  "anomaly_detection": {
+    "status": "evaluated",
+    "evaluated_by": "insights/tests/test_anomaly.py::SimulatorFaultEvaluationTests",
+    "data": "Phase 7 simulator, office site, 14 days hourly, seed 99",
+    "labels": "Per-sample fault labels emitted by the simulator, so these are real labels rather than a self-assessment.",
+    "detectors": [
+      "isolation_forest",
+      "seasonal_zscore",
+      "rule_night_load",
+      "rule_baseload_jump",
+      "rule_device_left_on"
+    ],
+    "scenarios": {
+      "night_load": {
+        "faults_injected": [
+          "night-load"
+        ],
+        "faulty_hours": 20,
+        "clean_hours": 316,
+        "true_positives": 20,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "baseload_jump": {
+        "faults_injected": [
+          "baseload-jump"
+        ],
+        "faulty_hours": 134,
+        "clean_hours": 202,
+        "true_positives": 60,
+        "false_positives": 1,
+        "false_negatives": 74,
+        "precision": 0.9836,
+        "recall": 0.4478,
+        "f1": 0.6154
+      },
+      "ac_left_on": {
+        "faults_injected": [
+          "ac-left-on"
+        ],
+        "faulty_hours": 85,
+        "clean_hours": 251,
+        "true_positives": 63,
+        "false_positives": 1,
+        "false_negatives": 22,
+        "precision": 0.9844,
+        "recall": 0.7412,
+        "f1": 0.8456
+      },
+      "all_faults": {
+        "faults_injected": [
+          "night-load",
+          "baseload-jump",
+          "ac-left-on"
+        ],
+        "faulty_hours": 134,
+        "clean_hours": 202,
+        "true_positives": 60,
+        "false_positives": 1,
+        "false_negatives": 74,
+        "precision": 0.9836,
+        "recall": 0.4478,
+        "f1": 0.6154
+      }
+    },
+    "caveats": [
+      "Scored on SYNTHETIC simulator data, not on real faults.",
+      "An anomaly is counted as a hit only when its hour matches a faulty hour exactly; a detector that flags the hour after a fault starts is counted as a miss, so recall is conservative.",
+      "The baseload-jump detector reports one finding for a multi-day condition by design, so its recall per faulty hour is low while its precision is high."
+    ]
+  },
+  "nilm": {
+    "status": "evaluated",
+    "title": "NILM step-change detector",
+    "model": "NILM step-change detector",
+    "created_by": "ml/training/train_nilm.py",
+    "created_at": "2026-10-03T11:18:11+00:00",
+    "approach": "Sustained step-change detection on the aggregate power series, with rises matched to later falls of comparable magnitude.",
+    "parameters": {
+      "min_step_w": 150.0,
+      "min_persistence_samples": 2,
+      "magnitude_tolerance": 0.45,
+      "max_event_samples": 72,
+      "interval_hours": 1.0
+    },
+    "results": {
+      "samples": 1440,
+      "events_detected": 393,
+      "events_matched": 364,
+      "events_unmatched": 29,
+      "total_energy_kwh": 2023.0858,
+      "energy_explained_by_events_kwh": 2317.6021,
+      "share_explained": 1.1456,
+      "largest_events": [
+        {
+          "start_index": 246,
+          "end_index": 309,
+          "start_time": "2007-01-19 07:00:00",
+          "end_time": "2007-01-21 22:00:00",
+          "magnitude_w": 2810.74,
+          "duration_hours": 63.0,
+          "energy_kwh": 177.076305,
+          "matched": true
+        },
+        {
+          "start_index": 418,
+          "end_index": 477,
+          "start_time": "2007-01-26 11:00:00",
+          "end_time": "2007-01-28 22:00:00",
+          "magnitude_w": 1955.58,
+          "duration_hours": 59.0,
+          "energy_kwh": 115.37922,
+          "matched": true
+        },
+        {
+          "start_index": 438,
+          "end_index": 500,
+          "start_time": "2007-01-27 07:00:00",
+          "end_time": "2007-01-29 21:00:00",
+          "magnitude_w": 1340.15,
+          "duration_hours": 62.0,
+          "energy_kwh": 83.0893,
+          "matched": true
+        },
+        {
+          "start_index": 557,
+          "end_index": 624,
+          "start_time": "2007-02-01 06:00:00",
+          "end_time": "2007-02-04 01:00:00",
+          "magnitude_w": 1231.01,
+          "duration_hours": 67.0,
+          "energy_kwh": 82.478005,
+          "matched": true
+        },
+        {
+          "start_index": 597,
+          "end_index": 634,
+          "start_time": "2007-02-02 22:00:00",
+          "end_time": "2007-02-04 11:00:00",
+          "magnitude_w": 1495.72,
+          "duration_hours": 37.0,
+          "energy_kwh": 55.341455,
+          "matched": true
+        },
+        {
+          "start_index": 930,
+          "end_index": 966,
+          "start_time": "2007-02-16 19:00:00",
+          "end_time": "2007-02-18 07:00:00",
+          "magnitude_w": 1442.97,
+          "duration_hours": 36.0,
+          "energy_kwh": 51.94692,
+          "matched": true
+        },
+        {
+          "start_index": 15,
+          "end_index": 82,
+          "start_time": "2007-01-09 16:00:00",
+          "end_time": "2007-01-12 11:00:00",
+          "magnitude_w": 765.75,
+          "duration_hours": 67.0,
+          "energy_kwh": 51.30525,
+          "matched": true
+        },
+        {
+          "start_index": 785,
+          "end_index": 807,
+          "start_time": "2007-02-10 18:00:00",
+          "end_time": "2007-02-11 16:00:00",
+          "magnitude_w": 2104.93,
+          "duration_hours": 22.0,
+          "energy_kwh": 46.30857,
+          "matched": true
+        },
+        {
+          "start_index": 157,
+          "end_index": 225,
+          "start_time": "2007-01-15 14:00:00",
+          "end_time": "2007-01-18 10:00:00",
+          "magnitude_w": 646.24,
+          "duration_hours": 68.0,
+          "energy_kwh": 43.94398,
+          "matched": true
+        },
+        {
+          "start_index": 397,
+          "end_index": 453,
+          "start_time": "2007-01-25 14:00:00",
+          "end_time": "2007-01-27 22:00:00",
+          "magnitude_w": 663.07,
+          "duration_hours": 56.0,
+          "energy_kwh": 37.13164,
+          "matched": true
+        }
+      ]
+    },
+    "data_provenance": {
+      "dataset": "UCI Individual household electric power consumption",
+      "is_synthetic": false
+    },
+    "metrics": {
+      "status": "not evaluated",
+      "reason": "NILM accuracy requires per-appliance ground truth. UK-DALE is not downloaded by this project, so there are no appliance labels to score against and no precision, recall or F1 can be computed. Scoring the detector against its own output would measure nothing."
+    },
+    "caveats": [
+      "This is the step-change fallback the project plan specifies for an unavailable UK-DALE dataset, not a trained disaggregator.",
+      "Events are inferred, not labelled: the detector cannot say which appliance caused a step, only that a step of that magnitude occurred.",
+      "A CNN+LSTM trainer is deliberately omitted: with no labels its output could not be checked, which is worse than not having it.",
+      "Hourly data limits resolution - appliances cycling within an hour are invisible. Sub-minute data would detect far more."
+    ]
+  }
+}

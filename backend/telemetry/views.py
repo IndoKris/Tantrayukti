@@ -7,6 +7,7 @@ a failed upload cannot create duplicates. Rows are inserted in chronological
 order so a backfill lands in the same order it was sampled.
 """
 
+from datetime import timedelta
 from decimal import Decimal
 
 from django.db import transaction
@@ -356,3 +357,148 @@ class UsageView(APIView):
         if user.is_superuser:
             return Organisation.objects.all()
         return Organisation.objects.filter(memberships__user=user)
+
+
+class ChatIngestView(APIView):
+    """
+    POST /api/ingest/chat/
+
+    Ingest a reading described in a chat message. Authenticated as a **user**
+    (not a device), because a person is reporting it.
+
+    Body:
+        {"device": 3, "modality": "text", "text": "AC ran 4 hours at 1500 W",
+         "occurred_on": "2026-10-03"}
+
+    Readings created here are marked `source=import`, so chat-derived data stays
+    distinguishable from metered telemetry in every rollup and query.
+
+    Three refusals, all deliberate:
+
+    * a modality with no configured provider returns **422** with the reason -
+      never a fabricated value;
+    * an unparseable message returns **422** with guidance on how to phrase it;
+    * an implausible figure returns **422** listing what failed the range check.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from datetime import date as date_type
+
+        from telemetry import extractors
+
+        device_id = request.data.get("device")
+        modality = str(request.data.get("modality") or "text").lower()
+
+        device = (
+            Device.objects.filter(
+                pk=device_id,
+                room__floor__building__organisation__in=self._visible_organisations(request),
+            )
+            .select_related("room__floor__building__organisation")
+            .first()
+        )
+        if device is None:
+            return Response(
+                {"detail": "No visible device with that id."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        extraction = extractors.extract(modality, request.data)
+
+        if not extraction.succeeded:
+            return Response(
+                {
+                    "detail": "Could not extract a reading from that message.",
+                    "extraction": extraction.as_dict(),
+                    "stored": 0,
+                },
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        problems = extractors.validate_ranges(extraction)
+        if problems:
+            return Response(
+                {
+                    "detail": "The extracted values are not plausible.",
+                    "problems": problems,
+                    "extraction": extraction.as_dict(),
+                    "stored": 0,
+                },
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        # Anchor the span. A date puts it at local midday; otherwise it ends now.
+        raw_date = request.data.get("occurred_on")
+        if raw_date:
+            try:
+                parsed = date_type.fromisoformat(str(raw_date))
+            except ValueError:
+                return Response(
+                    {"detail": f"occurred_on must be an ISO date, got '{raw_date}'."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            anchor = timezone.make_aware(
+                timezone.datetime.combine(parsed, timezone.datetime.min.time())
+            ) + timedelta(hours=12)
+        else:
+            anchor = timezone.now().replace(minute=0, second=0, microsecond=0)
+
+        interval = device.sample_interval_seconds
+        spread = extractors.spread_over_interval(
+            extraction.energy_kwh, extraction.hours, interval
+        )
+
+        interval_hours = Decimal(interval) / Decimal("3600")
+        rows = []
+        for offset, energy_kwh in spread:
+            energy_wh = (energy_kwh * Decimal("1000")).quantize(Decimal("0.0001"))
+            rows.append(
+                Reading(
+                    device=device,
+                    timestamp=anchor + offset,
+                    active_power_w=(energy_wh / interval_hours).quantize(Decimal("0.01"))
+                    if interval_hours > 0
+                    else Decimal("0"),
+                    energy_wh=energy_wh,
+                    source=Reading.Source.IMPORT,
+                    was_buffered=False,
+                )
+            )
+
+        with transaction.atomic():
+            created = Reading.objects.bulk_create(rows, ignore_conflicts=True)
+
+        return Response(
+            {
+                "detail": "Reading ingested.",
+                "device": {"id": device.pk, "name": device.name},
+                "extraction": extraction.as_dict(),
+                "stored": len(rows),
+                "created": len(created),
+                "window": {
+                    "from": local_iso(anchor),
+                    "to": local_iso(anchor + spread[-1][0]),
+                    "interval_seconds": interval,
+                },
+                "assumptions": [
+                    f"The reported {extraction.energy_kwh} kWh was spread evenly "
+                    f"across {len(rows)} interval(s) of {interval} s, because a "
+                    f"chat report covers a span rather than an instant. Storing it "
+                    f"as a single spike would look like an anomaly.",
+                    "Stored with source=import, so it stays distinguishable from "
+                    "metered telemetry.",
+                    f"Extracted by {extraction.provider} "
+                    f"({'mock' if extraction.is_mock else 'live'} provider, "
+                    f"confidence {extraction.confidence:.2f}).",
+                ],
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @staticmethod
+    def _visible_organisations(request):
+        if request.user.is_superuser:
+            return Organisation.objects.all()
+        return Organisation.objects.filter(memberships__user=request.user)

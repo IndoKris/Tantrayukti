@@ -58,4 +58,5 @@ simulator/.tokens.json
 # PlatformIO (firmware)
 firmware/.pio/
 firmware/.pioenvs/
-firmware/config.h
+# Holds the WiFi password and the device token.
+firmware/include/config.h

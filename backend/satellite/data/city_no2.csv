@@ -1,0 +1,36 @@
+# Tropospheric NO2 column density for 20 Indian cities.
+#
+# UNITS: micromol per square metre (umol/m2) of TROPOSPHERIC COLUMN.
+# This is a COLUMN DENSITY integrated through the atmosphere - it is NOT a
+# surface concentration and cannot be read as ppb or ug/m3 without a vertical
+# profile and boundary-layer assumptions this project does not make.
+#
+# PROVENANCE: static fallback values, order-of-magnitude only, used because no
+# Earth Engine / Sentinel-5P credentials are configured. They are shaped by the
+# relative ranking commonly reported for Indian cities (dense northern urban
+# centres higher, coastal and southern cities lower) and are NOT measurements.
+# Replace with a real Sentinel-5P TROPOMI extract before quoting any figure.
+#
+# Coordinates are rounded to 3 decimal places (city level, about 100 m) because
+# the community map must not resolve to a household.
+city,state,latitude,longitude,no2_umol_per_m2,population_millions
+Delhi,Delhi,28.614,77.209,178.4,32.2
+Ghaziabad,Uttar Pradesh,28.669,77.453,171.2,2.4
+Noida,Uttar Pradesh,28.535,77.391,166.9,0.9
+Kanpur,Uttar Pradesh,26.449,80.332,142.7,3.1
+Lucknow,Uttar Pradesh,26.847,80.947,138.5,3.7
+Patna,Bihar,25.594,85.138,134.1,2.4
+Kolkata,West Bengal,22.573,88.364,131.8,15.1
+Mumbai,Maharashtra,19.076,72.878,126.3,21.3
+Jaipur,Rajasthan,26.912,75.787,118.6,4.1
+Ahmedabad,Gujarat,23.023,72.572,116.4,8.4
+Pune,Maharashtra,18.520,73.857,104.2,7.2
+Nagpur,Maharashtra,21.146,79.089,97.8,2.9
+Surat,Gujarat,21.170,72.831,95.1,7.5
+Hyderabad,Telangana,17.385,78.487,92.6,10.5
+Bhopal,Madhya Pradesh,23.260,77.413,88.3,2.4
+Chennai,Tamil Nadu,13.083,80.270,86.7,11.5
+Bengaluru,Karnataka,12.972,77.594,84.2,13.6
+Visakhapatnam,Andhra Pradesh,17.687,83.218,71.4,2.4
+Kochi,Kerala,9.932,76.267,58.9,2.1
+Thiruvananthapuram,Kerala,8.524,76.937,52.3,1.7

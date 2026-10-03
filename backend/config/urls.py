@@ -16,5 +16,8 @@ urlpatterns = [
     path("api/spaces/", include("spaces.urls")),
     path("api/", include("telemetry.urls")),
     path("api/billing/", include("billing.urls")),
-    # Later phases add insights routes here.
+    path("api/", include("insights.urls")),
+    path("api/activity/", include("activity.urls")),
+    path("api/game/", include("gamification.urls")),
+    path("api/", include("satellite.urls")),
 ]

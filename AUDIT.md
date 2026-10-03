@@ -466,3 +466,214 @@ assumptions, not the grid. Phase 12 metrics must say so."
 licence, units, row count, date range, `is_synthetic`, and what cleaning removed. This is the
 upstream half of the plan's honesty rule: a metric is only as trustworthy as the provenance of the
 data behind it.
+
+---
+
+## 17. Phases 11-20
+
+Run as one batch at the user's request, rather than one phase per run. Every phase's Check was still
+executed; the results are in `PROGRESS.md`.
+
+### The TensorFlow fallback, and why metrics.json says "fallback"
+
+`uv sync --extra deep` failed twice. The second attempt failed inside uv after its own 5 retries
+with a DNS error on `files.pythonhosted.org` while fetching the 335 MB `tensorflow-2.21.0` wheel - a
+genuine network failure, not a timeout of ours. Per the plan's rule 5 (one attempt, then the
+fallback) the pipeline took the documented path.
+
+`ml/training/backends.py` therefore ships two backends behind one interface:
+
+* `KerasLstmBackend` - the stacked LSTM the plan specifies (128, 64, dropout 0.2), used whenever
+  Keras imports.
+* `SklearnMlpBackend` - an MLP over the flattened lookback window, used otherwise.
+
+**The fallback is never silently substituted.** `select_backend` reports which was chosen and why;
+the choice is written into the model manifest; `metrics.json` carries `backend` and `is_fallback`
+beside every score; the `/api/forecast/` response repeats it; and the dashboard and metrics page
+both print "fallback model, not the specified LSTM". Install it later with
+`uv sync --extra ml --extra deep` and re-run the two training commands - no code changes needed.
+
+**A note on the forecast numbers.** The trained fallback scores MAE 0.765 kWh, MAPE 158.8% and
+**R2 -0.044** one-step (MAE 0.964 / R2 -0.540 over the recursive 24 h horizon). It beats the
+seasonal naive baseline on MAE by 16% but is worse than predicting the test mean on R2. That is
+reported as-is: the plan forbids re-training to chase a better score, so nothing was tuned. The
+likely causes (fallback architecture, 5 epochs, about 2000 hours of a single noisy household) are
+recorded in `BACKLOG.md` rather than papered over.
+
+### Bugs found and fixed during these phases
+
+1. **`Dataset.n_features` included the target column**, so `inverse_target` was called with a width
+   one greater than the scaler's and crashed the evaluation. Renamed to `n_columns` with
+   `n_exogenous_features` alongside, which is what invited the off-by-one in the first place.
+2. **The Isolation Forest threshold was a fixed fraction in disguise.** The module docstring claimed
+   it avoided the plan's `contamination` trap while using the 1st percentile of the score
+   distribution - which is always 1% of the data. Its own test caught it by flagging anomalies in a
+   clean week. Now a point must be an outlier by the forest's own `contamination="auto"` offset
+   **and** clear a robust magnitude fence.
+3. **The magnitude fence was global**, which is wrong for a bimodal load: an office runs about 6 kW
+   on weekday afternoons and near zero at weekends, so the whole-series median sat low and every
+   normal weekday peak cleared the fence - 19.3% of hours flagged on 14 clean simulated days. The
+   fence is now per hour-of-day and day-type.
+4. **Mean/standard-deviation baselines let a spike mask itself.** One 12 kWh outlier among ten 1 kWh
+   hours raises the standard deviation enough that the spike scores under 3 sigma and goes
+   undetected. `robust_stats` now uses the median and a MAD-derived sigma.
+5. **"Device left on" fired on every normal evening peak**, because it compared against the global
+   median. It now compares each hour against its own hour-of-day baseline.
+6. **`ActivityEntry.formula` rendered differently before and after a database reload**
+   (`Decimal("100")` vs `Decimal("100.000")`). The quantity is now quantized in the property.
+7. **The failed TensorFlow sync left the venv without numpy**, which broke `manage.py check`.
+   Restored with `uv sync --extra postgres --extra ml`. Worth knowing: a partially-failed `uv sync`
+   can remove packages it had resolved away.
+
+### Anomaly detection, scored against real labels
+
+`insights/tests/test_anomaly.py::SimulatorFaultEvaluationTests` runs the Phase 7 simulator with
+faults injected, scores the detectors against the simulator's own per-sample fault labels, and
+writes the result into `metrics.json`:
+
+| scenario | precision | recall | F1 |
+| --- | --- | --- | --- |
+| night_load | 1.000 | 1.000 | 1.000 |
+| ac_left_on | 0.984 | 0.741 | 0.846 |
+| baseload_jump | 0.984 | 0.448 | 0.615 |
+
+Baseload-jump recall is low **by design** - it reports one finding for a multi-day condition, so
+most faulty hours are counted as misses. That is stated in the metrics caveats rather than hidden by
+changing the scoring.
+
+### Chart work (Phases 17-19)
+
+The `dataviz` skill was loaded before any chart code was written, and its palette validator was run
+against this project's own surfaces rather than the skill's defaults:
+
+* light `#ffffff`: CVD dE 9.2, normal-vision dE 24.0 - all checks pass
+* dark `#1e293b`: CVD dE 9.4, normal-vision dE 20.9 - all checks pass
+
+Light-mode series-3 sits at 2.82:1 contrast, below the 3:1 gate, so the palette's **relief rule**
+applies: `ChartFrame` always renders a legend for two or more series and always offers a table view
+of the same numbers. Three categorical slots is the documented cap for all-pairs forms, so a fourth
+series would fold into `other` rather than inventing a hue. Power (W) and energy (kWh) are never put
+on one axis - that is both the dual-axis anti-pattern and the kW/kWh confusion this project forbids.
+
+### Honesty measures added in this batch
+
+* `metrics.json` is the only source of every metric in the UI; `/api/ml/metrics/` serves the file
+  verbatim and the metrics page narrows it rather than restating it.
+* Recommendations return the formula, the assumptions, the assumed capital cost and the caveat that
+  the figure is an estimate rather than a measured saving.
+* Causes are ranked by deterministic rules over recorded evidence; the optional LLM flag may only
+  reword, and the response says whether it was used.
+* Space comparison excludes spaces with no area or occupancy and lists them, rather than ranking
+  them on raw energy and calling the biggest space a finding.
+* Activity entries are always `is_verified=False`, with the factor snapshotted per entry so a later
+  correction cannot rewrite history, and all 23 seeded factors are flagged UNVERIFIED with a source.
+* The demo fault injector tags every reading it writes `source=simulator`.
+
+---
+
+## 18. Phases 21-25
+
+Run as one batch at the user's request. Every phase's Check was executed.
+
+### Phase 21: the verified/unverified split is structural
+
+`Profile` keeps two parallel tallies - `verified_xp` / `verified_kwh_saved` and
+`unverified_xp` - rather than one column and a filter. The leaderboard orders on
+verified XP only, levels derive from verified XP only, and badges carry
+`requires_verified`. A test awards 1,000,000 unverified XP and asserts the ranking
+does not move.
+
+Proof of saving normalises for window length before subtracting: a 48 h baseline
+against a 24 h claim window would otherwise show a 50% saving from arithmetic
+alone, and a test pins that case at zero. XP is credited from the **measured**
+saving, so over-claiming earns nothing extra. Too little telemetry yields
+`unverifiable`, not `rejected` - "we cannot tell" and "it did not happen" are
+different answers.
+
+### Phase 22: units and privacy
+
+NO2 is stored and served as **umol/m2 of tropospheric column**. No ppb or ug/m3
+conversion exists anywhere in the codebase, and a test asserts no response field
+name contains "ppb", "ug_per_m3" or "surface". Converting a column to a surface
+concentration needs a vertical profile and boundary-layer height that this project
+does not model.
+
+Coordinates are rounded to 3 decimal places (~100 m) **in `save()`**, so the
+precise value is never persisted rather than merely never rendered.
+
+Hotspot detection repeats the Phase 13 lesson: with only 20 cities, a fixed
+`contamination` or a percentile cutoff would label a fixed number of them
+regardless of the data. Detection requires the forest's own `contamination="auto"`
+outlier flag **and** a robust fence (`median + 1.5 x MAD-sigma`). A test with 12
+similar cities asserts zero hotspots. On the seeded data it flags 3 of 20 (Delhi,
+Ghaziabad, Noida) above 163.01 umol/m2.
+
+### Phase 23: declining beats fabricating
+
+The text extractor parses with regular expressions and reports only what it
+matched. The image and audio extractors **decline** with a reason and
+`confidence=0.0`, and the endpoint returns 422. A mock emitting a plausible
+reading for a photo it cannot see would put fabricated data into the database,
+which is worse than refusing - and a test asserts the refusal message says so.
+
+Chat energy is **spread across intervals** rather than stored as one reading. A
+single large value at one timestamp is exactly the spike the Phase 13 detector
+exists to catch, so storing it that way would manufacture an anomaly. Rows are
+tagged `source=import`.
+
+NILM is the step-change fallback the plan specifies, with `metrics.status =
+"not evaluated"`: UK-DALE is not downloaded, so there are no appliance labels and
+no precision or F1 can be computed. The run also revealed **over-attribution** -
+events accounted for 114.6% of metered energy, because overlapping appliances
+produce combined steps - so `over_attribution_caveats` now states that in the
+manifest rather than leaving a reader to assume a bug. A CNN+LSTM trainer is
+deliberately omitted: with no labels its output could not be checked.
+
+### Phase 24: firmware, unbuilt and said so
+
+PlatformIO is not installed here, so `pio run` was **not** executed; the phase
+instructions permit skipping the build and saying so, and both `firmware/README.md`
+and the README state it.
+
+The firmware uses EmonLib's `realPower` rather than `Vrms * Irms`, because
+apparent power overstates a reactive load. The server's "active power cannot
+exceed apparent power" check then catches a mis-wired clamp. `energy_wh` is
+interval energy, never a running total.
+
+It reports `"calibrated": false` and tags uploads `1.0.0-uncalibrated` until
+`CALIBRATION_CONFIRMED` is set, because an uncalibrated meter produces confident
+wrong numbers. Readings are queued to NVS **first** and only dropped once the
+server acknowledges them, so a POST that hangs past the next interval loses
+nothing. A 400/422 drops the batch rather than wedging the queue forever.
+
+### Phase 25: the generated document
+
+`docs/ML_EVALUATION.md` is written by `ml/evaluation/report.py` from
+`metrics.json`. That is the mechanism behind the honesty rule: a figure in the
+docs came out of evaluation code, and a model marked "not evaluated" appears as
+such rather than being quietly omitted. CI regenerates it and uploads it as an
+artifact.
+
+CI also fails on a missing migration (`makemigrations --check`), because a model
+change without a migration passes the tests and then breaks a deploy. The
+`[deep]` extra is deliberately omitted from CI - it is a 335 MB download and the
+code falls back to a labelled model without it.
+
+Compose publishes only the frontend; the database and backend are reachable only
+on the internal network, and nginx proxies `/api` so the browser sees one origin
+and CORS never applies. The `ml-artifacts` volume persists `metrics.json` across
+rebuilds, since losing it would blank the metrics page.
+
+### Final check
+
+* `docker compose config` - **valid**
+* `python manage.py check` - 0 issues
+* `python manage.py test` - **597 tests, OK**
+* `npm run lint` - clean
+* `npm run build` - clean
+* `python simulator/run.py --days 7 --dry-run` - passes
+
+All 25 rows in `PROGRESS.md` are `DONE`. Nothing in version control was deleted
+or renamed across the whole build, and the pre-existing starter files
+(`frontend/src/App.tsx`, `App.css`, `src/assets/`, `public/`) remain
+byte-for-byte unchanged.

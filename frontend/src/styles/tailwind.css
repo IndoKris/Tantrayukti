@@ -49,3 +49,55 @@
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
+
+/* --- Chart palette -----------------------------------------------------------
+ * Categorical slots 1-3 from the validated reference palette, which clears the
+ * all-pairs CVD and normal-vision floors in both modes. Verified with the
+ * validator against this project's own surfaces:
+ *   light  (#ffffff): CVD dE 9.2, normal dE 24.0 - PASS
+ *   dark   (#1e293b): CVD dE 9.4, normal dE 20.9 - PASS
+ * Light-mode series-3 (aqua) sits at 2.82:1, below 3:1, so the relief rule
+ * applies: every chart ships a legend and a table view, never colour alone.
+ *
+ * Three slots is the documented cap for all-pairs forms. A fourth series folds
+ * into "Other" rather than inventing a hue.
+ *
+ * Status colours are fixed and never themed, and never double as a series.
+ */
+:root {
+  --series-1: #2a78d6; /* blue   - measured / actual */
+  --series-2: #eb6834; /* orange - forecast */
+  --series-3: #1baf7a; /* aqua   - baseline or comparison */
+  --series-other: #64748b;
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  --grid-line: #e2e8f0;
+  --axis-ink: #64748b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    /* Same three hues, re-stepped for the dark surface - not an automatic flip. */
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-other: #94a3b8;
+
+    --grid-line: #334155;
+    --axis-ink: #94a3b8;
+  }
+}
+
+:root[data-theme='dark'] {
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-other: #94a3b8;
+
+  --grid-line: #334155;
+  --axis-ink: #94a3b8;
+}

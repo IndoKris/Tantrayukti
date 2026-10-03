@@ -42,3 +42,27 @@ Add here instead of expanding a phase's scope.
 - [Phase 10] Cache processed datasets as Parquet rather than CSV, to cut load time on the full UCI series.
 - [Phase 10] Checksum the UCI download so a truncated or changed archive is detected rather than silently parsed.
 - [Phase 10] Expose the provenance sidecar through the API so the Phase 19 metrics page can show it next to each figure.
+- [Phase 11] Install TensorFlow and re-train the actual stacked LSTM; the download failed (DNS), so the fallback MLP is what metrics.json currently reports.
+- [Phase 11] Forecast quality is poor (negative R2). Not tuned, per the no-retraining rule. Likely needs more history, per-device models, or weather features.
+- [Phase 11] Per-device trained models instead of one global forecaster.
+- [Phase 12] Replace the synthetic emission series with a real hourly grid feed before the RF factor is used for anything reportable.
+- [Phase 13] Baseload-jump recall is low by design (one finding per multi-day condition); consider emitting one anomaly per affected day.
+- [Phase 13] Schedule detection per space instead of the assumed 09:00-19:00 occupancy window.
+- [Phase 14] Wire a real LLM provider behind the `?llm=1` flag, constrained to rewording the structured facts.
+- [Phase 15] Replace assumed capital costs and the 6%-per-degree rule of thumb with per-site figures.
+- [Phase 17] Live polling or websockets for the dashboard; it currently loads once per navigation.
+- [Phase 19] Chart the anomaly on a timeline next to its cause, not just the feed row.
+- [Phase 20] PDF export alongside CSV, and recurring-activity templates.
+- [Phase 20] Frontend tests; the UI is currently verified by lint, tsc and build only.
+- [Phase 21] Per-organisation leaderboards, and a decay so an old saving does not rank forever.
+- [Phase 21] Let a claim target a space rather than a single device.
+- [Phase 22] Real Sentinel-5P TROPOMI extract via Earth Engine, to replace the static NO2 fallback.
+- [Phase 22] Marker clustering on the map once there are more than a few dozen points.
+- [Phase 23] Wire real Gemini Vision and Whisper providers behind the existing extractor interface.
+- [Phase 23] Sub-minute telemetry for NILM: hourly data cannot see appliances that cycle within the hour.
+- [Phase 23] Fix NILM over-attribution (114.6% of metered energy) by resolving overlapping events.
+- [Phase 24] Run `pio run` and flash real hardware; the firmware is committed unbuilt.
+- [Phase 24] HTTPS with certificate pinning on the ESP32, so the device token is not sent in clear text.
+- [Phase 25] Frontend tests (Vitest + Testing Library); the UI is currently verified by lint, tsc and build only.
+- [Phase 25] PDF export alongside CSV.
+- [Phase 25] Push images to a registry and add a deploy workflow.

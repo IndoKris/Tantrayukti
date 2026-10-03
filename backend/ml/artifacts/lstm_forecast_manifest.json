@@ -1,0 +1,76 @@
+{
+  "model": "24-hour load forecaster",
+  "created_by": "ml/training/train_lstm.py",
+  "preset": "small",
+  "config": {
+    "name": "small",
+    "units": [
+      128,
+      64
+    ],
+    "dropout": 0.2,
+    "lookback_hours": 24,
+    "horizon_hours": 24,
+    "epochs": 5,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "max_rows": 4000,
+    "train_fraction": 0.7,
+    "validation_fraction": 0.15,
+    "target": "energy_kwh",
+    "features": [
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "is_weekend"
+    ]
+  },
+  "backend": {
+    "backend": "sklearn-mlp",
+    "is_fallback": true,
+    "keras_available": false,
+    "detail": "ModuleNotFoundError: No module named 'keras'",
+    "note": "FALLBACK MODEL. Keras unavailable (ModuleNotFoundError: No module named 'keras'). An MLP over the flattened lookback window was trained instead of the specified stacked LSTM. Scores from this backend must not be reported as LSTM results. Install with `uv sync --extra ml --extra deep` to train the LSTM."
+  },
+  "architecture": "MLPRegressor (128, 64) over the flattened lookback window. FALLBACK - not an LSTM; Keras/TensorFlow was unavailable.",
+  "training": {
+    "epochs_run": 5,
+    "final_train_loss": 0.011839643655852838,
+    "final_validation_loss": 0.03889360651373863
+  },
+  "dataset": {
+    "lookback_hours": 24,
+    "features": [
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "is_weekend"
+    ],
+    "target": "energy_kwh",
+    "n_columns": 6,
+    "n_exogenous_features": 5,
+    "train_windows": 1375,
+    "validation_windows": 275,
+    "test_windows": 277,
+    "train_mean_kwh": 1.653215
+  },
+  "data_provenance": {
+    "dataset": "UCI Individual household electric power consumption",
+    "is_synthetic": false,
+    "source": "UCI Machine Learning Repository, dataset 235 (archive.ics.uci.edu/dataset/235). Measurements from a single household in Sceaux, near Paris, at 1-minute resolution, December 2006 to November 2010.",
+    "rows": 1999,
+    "first_timestamp": "2006-12-16 18:00:00",
+    "last_timestamp": "2007-03-10 00:00:00"
+  },
+  "artifacts": {
+    "model": "C:\\Users\\Suraj\\OneDrive\\Desktop\\Tantrayukti\\backend\\ml\\artifacts\\lstm_forecast.joblib",
+    "scaler": "C:\\Users\\Suraj\\OneDrive\\Desktop\\Tantrayukti\\backend\\ml\\artifacts\\lstm_forecast_scaler.joblib"
+  },
+  "scaler": {
+    "fit_on": "training split only",
+    "note": "Fitting the scaler on the full series would leak the test set's range into training and inflate every score."
+  },
+  "horizon_note": "The model predicts one hour ahead. The 24-hour forecast is produced recursively by feeding each prediction back as input, so error compounds across the horizon - see ml/inference.py."
+}

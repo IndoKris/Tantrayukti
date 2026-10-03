@@ -1,0 +1,139 @@
+{
+  "model": "NILM step-change detector",
+  "created_by": "ml/training/train_nilm.py",
+  "created_at": "2026-10-03T11:30:23+00:00",
+  "approach": "Sustained step-change detection on the aggregate power series, with rises matched to later falls of comparable magnitude.",
+  "parameters": {
+    "min_step_w": 150.0,
+    "min_persistence_samples": 2,
+    "magnitude_tolerance": 0.45,
+    "max_event_samples": 72,
+    "interval_hours": 1.0
+  },
+  "results": {
+    "samples": 1440,
+    "events_detected": 393,
+    "events_matched": 364,
+    "events_unmatched": 29,
+    "total_energy_kwh": 2023.0858,
+    "energy_explained_by_events_kwh": 2317.6021,
+    "share_explained": 1.1456,
+    "largest_events": [
+      {
+        "start_index": 246,
+        "end_index": 309,
+        "start_time": "2007-01-19 07:00:00",
+        "end_time": "2007-01-21 22:00:00",
+        "magnitude_w": 2810.74,
+        "duration_hours": 63.0,
+        "energy_kwh": 177.076305,
+        "matched": true
+      },
+      {
+        "start_index": 418,
+        "end_index": 477,
+        "start_time": "2007-01-26 11:00:00",
+        "end_time": "2007-01-28 22:00:00",
+        "magnitude_w": 1955.58,
+        "duration_hours": 59.0,
+        "energy_kwh": 115.37922,
+        "matched": true
+      },
+      {
+        "start_index": 438,
+        "end_index": 500,
+        "start_time": "2007-01-27 07:00:00",
+        "end_time": "2007-01-29 21:00:00",
+        "magnitude_w": 1340.15,
+        "duration_hours": 62.0,
+        "energy_kwh": 83.0893,
+        "matched": true
+      },
+      {
+        "start_index": 557,
+        "end_index": 624,
+        "start_time": "2007-02-01 06:00:00",
+        "end_time": "2007-02-04 01:00:00",
+        "magnitude_w": 1231.01,
+        "duration_hours": 67.0,
+        "energy_kwh": 82.478005,
+        "matched": true
+      },
+      {
+        "start_index": 597,
+        "end_index": 634,
+        "start_time": "2007-02-02 22:00:00",
+        "end_time": "2007-02-04 11:00:00",
+        "magnitude_w": 1495.72,
+        "duration_hours": 37.0,
+        "energy_kwh": 55.341455,
+        "matched": true
+      },
+      {
+        "start_index": 930,
+        "end_index": 966,
+        "start_time": "2007-02-16 19:00:00",
+        "end_time": "2007-02-18 07:00:00",
+        "magnitude_w": 1442.97,
+        "duration_hours": 36.0,
+        "energy_kwh": 51.94692,
+        "matched": true
+      },
+      {
+        "start_index": 15,
+        "end_index": 82,
+        "start_time": "2007-01-09 16:00:00",
+        "end_time": "2007-01-12 11:00:00",
+        "magnitude_w": 765.75,
+        "duration_hours": 67.0,
+        "energy_kwh": 51.30525,
+        "matched": true
+      },
+      {
+        "start_index": 785,
+        "end_index": 807,
+        "start_time": "2007-02-10 18:00:00",
+        "end_time": "2007-02-11 16:00:00",
+        "magnitude_w": 2104.93,
+        "duration_hours": 22.0,
+        "energy_kwh": 46.30857,
+        "matched": true
+      },
+      {
+        "start_index": 157,
+        "end_index": 225,
+        "start_time": "2007-01-15 14:00:00",
+        "end_time": "2007-01-18 10:00:00",
+        "magnitude_w": 646.24,
+        "duration_hours": 68.0,
+        "energy_kwh": 43.94398,
+        "matched": true
+      },
+      {
+        "start_index": 397,
+        "end_index": 453,
+        "start_time": "2007-01-25 14:00:00",
+        "end_time": "2007-01-27 22:00:00",
+        "magnitude_w": 663.07,
+        "duration_hours": 56.0,
+        "energy_kwh": 37.13164,
+        "matched": true
+      }
+    ]
+  },
+  "data_provenance": {
+    "dataset": "UCI Individual household electric power consumption",
+    "is_synthetic": false
+  },
+  "metrics": {
+    "status": "not evaluated",
+    "reason": "NILM accuracy requires per-appliance ground truth. UK-DALE is not downloaded by this project, so there are no appliance labels to score against and no precision, recall or F1 can be computed. Scoring the detector against its own output would measure nothing."
+  },
+  "caveats": [
+    "OVER-ATTRIBUTION: the detected events account for 114.6% of the metered energy, which is more than actually flowed. Overlapping appliances produce combined steps and a matched rise-fall pair can span other activity, so event energy is an upper bound rather than a decomposition that sums to the total. Treat the per-event figures as indicative only.",
+    "This is the step-change fallback the project plan specifies for an unavailable UK-DALE dataset, not a trained disaggregator.",
+    "Events are inferred, not labelled: the detector cannot say which appliance caused a step, only that a step of that magnitude occurred.",
+    "A CNN+LSTM trainer is deliberately omitted: with no labels its output could not be checked, which is worse than not having it.",
+    "Hourly data limits resolution - appliances cycling within an hour are invisible. Sub-minute data would detect far more."
+  ]
+}
