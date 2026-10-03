@@ -65,7 +65,8 @@ INSTALLED_APPS = [
     # Local
     "accounts",
     "spaces",
-    # Further local apps are added by later phases (telemetry, billing, ...).
+    "telemetry",
+    # Further local apps are added by later phases (billing, insights, ...).
 ]
 
 MIDDLEWARE = [

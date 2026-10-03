@@ -14,6 +14,6 @@ urlpatterns = [
     path("api/health/", HealthView.as_view(), name="health"),
     path("api/auth/", include("accounts.urls")),
     path("api/spaces/", include("spaces.urls")),
-    # Later phases add, for example:
-    #   path("api/", include("telemetry.urls")),
+    path("api/", include("telemetry.urls")),
+    # Later phases add billing and insights routes here.
 ]

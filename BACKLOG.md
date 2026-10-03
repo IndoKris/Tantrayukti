@@ -16,3 +16,8 @@ Add here instead of expanding a phase's scope.
 - [Phase 5] Move list filtering to django-filter instead of hand-rolled query-param filters in `get_queryset`.
 - [Phase 5] Bulk space import from CSV/XLSX, for onboarding a real building without hand-entering rooms.
 - [Phase 5] Cache the derived `total_area_sqm` / `total_occupancy` rollups if the tree endpoint gets slow on large hierarchies.
+- [Phase 6] Sign the reading payload on the device (HMAC over body + nonce) so telemetry integrity is provable, not just token possession.
+- [Phase 6] Rate-limit `POST /api/readings/` per device token to blunt a leaked-token flood.
+- [Phase 6] Emit UTC on every API route instead of the active timezone, if the frontend ever needs offset-free timestamps.
+- [Phase 6] Retention/downsampling policy for `Reading` once the table grows past a few million rows.
+- [Phase 6] Reconcile `reported_buffer_count` against observed late arrivals and alert when the device's buffer never drains.

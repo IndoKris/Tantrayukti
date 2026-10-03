@@ -223,3 +223,38 @@ Deleted / renamed: **nothing**.
   `changepassword` command. Re-running is idempotent (`update_or_create` throughout).
 * Building carries optional `latitude` / `longitude` for the Phase 22 community map; the seed values
   are Nagpur coordinates already rounded to city level.
+
+---
+
+## 12. Phase 6 changes to the repo
+
+Created in `backend/telemetry/`: `__init__.py`, `apps.py`, `models.py`, `authentication.py`,
+`serializers.py`, `views.py`, `urls.py`, `admin.py`, `migrations/{__init__,0001_initial}.py`,
+`tests/{__init__,test_models,test_ingest,test_devices}.py`.
+Modified in `backend/`: `config/settings.py` (registered `telemetry`), `config/urls.py` (mounted
+`/api/` for `readings/` and `devices/`).
+Deleted / renamed: **nothing**.
+
+**Honesty note on device authentication (plan: "do not claim cryptographic verification").**
+A device presents a random 32-byte secret as a bearer token. Only its SHA-256 hash is stored, and
+comparison is constant-time. That proves *the caller knows the secret*; it does **not** verify a
+signature over the reading, so it does not prove the values came from that hardware or were
+unaltered by whoever holds the token. This limitation is written into
+`telemetry/authentication.py` rather than glossed over, and payload signing is in `BACKLOG.md`.
+Chosen over the plan's "signed device tokens" because a stored-hash random secret is individually
+revocable, whereas a `SECRET_KEY`-derived signature is not.
+
+**Units.** `active_power_w` is instantaneous watts; `energy_wh` is energy for *that interval only*,
+never a cumulative meter total — Phase 8 sums it into kWh, so a cumulative value would be double
+counted. `Reading.energy_kwh` exposes the conversion so no caller divides by 1000 by hand.
+
+**Timezone consistency fix.** The `/status/` route builds its response as a plain dict, which
+serialised datetimes as UTC, while DRF serializer fields render in the active timezone
+(`Asia/Kolkata`). One API was emitting two offsets for the same instant. `local_iso()` now renders
+hand-built responses the same way DRF does, and a test asserts the `/status/` and detail routes
+report an identical `last_seen_at`.
+
+**Idempotent ingestion.** `(device, timestamp)` is unique and inserts use `ignore_conflicts`, so a
+device replaying its flash buffer after a failed upload cannot duplicate rows. Each batch is sorted
+by timestamp before insert, so a backfill is written in sample order. The response returns
+`created` / `duplicates` / `received` so firmware can trim its buffer with confidence.

@@ -10,7 +10,7 @@ Status values: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | 3 | Frontend skeleton | A Foundation | DONE | Tailwind v4 + react-router 7 added to the existing React 19/TS app; layout shell, 6 placeholder pages + 404, API client with `VITE_API_BASE_URL` and dev proxy; starter page preserved at `/welcome`. |
 | 4 | Auth and roles | A Foundation | DONE | Custom `accounts.User` with admin/manager/member roles, JWT login/refresh/verify/me with role claim, role permission classes, frontend AuthProvider + ProtectedRoute + login page; 25 accounts tests (33 total) pass. |
 | 5 | Spaces hierarchy | A Foundation | DONE | Organisation > Building > Floor > Room with derived area/occupancy, membership-scoped CRUD + `/tree/`, idempotent `seed_spaces` (office + home); 46 spaces tests (79 total) pass. |
-| 6 | Telemetry ingestion | B Data pipeline | TODO | |
+| 6 | Telemetry ingestion | B Data pipeline | DONE | Device + Reading models with named units, hashed device-token auth, `POST /api/readings/` (single/list/wrapped, validated, idempotent chronological backfill), digital-twin status; 69 telemetry tests (148 total) pass. |
 | 7 | Simulator | B Data pipeline | TODO | |
 | 8 | Rollups API | B Data pipeline | TODO | |
 | 9 | Cost and CO2 engines | B Data pipeline | TODO | |
