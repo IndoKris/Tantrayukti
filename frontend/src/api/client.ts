@@ -6,9 +6,12 @@
  *   2. Otherwise the empty string, so requests go to a same-origin `/api/...` path
  *      and are forwarded by the Vite dev proxy in vite.config.ts.
  *
- * Later phases add the JWT token handling from Phase 4 inside `request()`, so no
- * component ever has to know how auth is attached.
+ * Authentication (Phase 4) is handled here rather than in components: the access
+ * token is attached automatically, and a 401 triggers one refresh-and-retry before
+ * the error is surfaced.
  */
+
+import { tokenStore } from './tokens.ts'
 
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL ?? ''
 
@@ -33,6 +36,57 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   params?: Record<string, string | number | boolean | null | undefined>
   /** JSON request body. Serialised automatically with the right Content-Type. */
   json?: unknown
+  /** Send without the Authorization header (login, refresh, health). */
+  anonymous?: boolean
+  /** Internal: set while replaying a request after a token refresh. */
+  _retried?: boolean
+}
+
+/** Called when refreshing fails, so the app can send the user back to /login. */
+type SessionExpiredHandler = () => void
+
+let onSessionExpired: SessionExpiredHandler = () => {}
+
+export function setSessionExpiredHandler(handler: SessionExpiredHandler): void {
+  onSessionExpired = handler
+}
+
+/**
+ * Exchange the stored refresh token for a new access token.
+ *
+ * Concurrent 401s share one in-flight refresh, so a page with several queries
+ * does not fire several refreshes and rotate the token out from under itself.
+ */
+let refreshInFlight: Promise<string | null> | null = null
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refresh = tokenStore.getRefresh()
+  if (!refresh) return null
+
+  refreshInFlight ??= (async () => {
+    try {
+      const data = await request<{ access: string; refresh?: string }>('/api/auth/refresh/', {
+        method: 'POST',
+        json: { refresh },
+        anonymous: true,
+      })
+      // ROTATE_REFRESH_TOKENS is on in the backend, so store the new one when sent.
+      if (data.refresh) {
+        tokenStore.set({ access: data.access, refresh: data.refresh })
+      } else {
+        tokenStore.setAccess(data.access)
+      }
+      return data.access
+    } catch {
+      tokenStore.clear()
+      onSessionExpired()
+      return null
+    } finally {
+      refreshInFlight = null
+    }
+  })()
+
+  return refreshInFlight
 }
 
 function buildUrl(path: string, params?: RequestOptions['params']): string {
@@ -56,17 +110,27 @@ function buildUrl(path: string, params?: RequestOptions['params']): string {
  * callers can surface DRF's field-level validation errors.
  */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { params, json, headers, ...init } = options
+  const { params, json, headers, anonymous, _retried, ...init } = options
+  const access = anonymous ? null : tokenStore.getAccess()
 
   const response = await fetch(buildUrl(path, params), {
     ...init,
     headers: {
       Accept: 'application/json',
       ...(json !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(access ? { Authorization: `Bearer ${access}` } : {}),
       ...headers,
     },
     body: json !== undefined ? JSON.stringify(json) : undefined,
   })
+
+  // Expired access token: refresh once, then replay the original request.
+  if (response.status === 401 && !anonymous && !_retried && tokenStore.getRefresh()) {
+    const renewed = await refreshAccessToken()
+    if (renewed) {
+      return request<T>(path, { ...options, _retried: true })
+    }
+  }
 
   const contentType = response.headers.get('content-type') ?? ''
   const payload: unknown = contentType.includes('application/json')
@@ -113,4 +177,4 @@ export interface HealthResponse {
   }
 }
 
-export const getHealth = () => api.get<HealthResponse>('/api/health/')
+export const getHealth = () => api.get<HealthResponse>('/api/health/', { anonymous: true })

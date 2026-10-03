@@ -9,6 +9,7 @@ Database: `DATABASE_URL` is used when set (e.g. PostgreSQL); otherwise the
 project falls back to SQLite at `backend/db.sqlite3`, per the plan's fallback rule.
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
@@ -60,7 +61,10 @@ INSTALLED_APPS = [
     # Third party
     "corsheaders",
     "rest_framework",
-    # Local apps are added by later phases (accounts, spaces, telemetry, ...).
+    "rest_framework_simplejwt",
+    # Local
+    "accounts",
+    # Further local apps are added by later phases (spaces, telemetry, ...).
 ]
 
 MIDDLEWARE = [
@@ -120,6 +124,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- Authentication -----------------------------------------------------------
 
+AUTH_USER_MODEL = "accounts.User"
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -127,7 +133,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Phase 4 replaces this with a custom user model carrying roles.
 
 # --- Internationalisation -----------------------------------------------------
 
@@ -146,8 +151,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # Session auth is kept so the browsable API and the admin stay usable.
         "rest_framework.authentication.SessionAuthentication",
-        # Phase 4 adds JWT authentication here.
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -174,6 +180,25 @@ CSRF_TRUSTED_ORIGINS = env_list(
     "DJANGO_CSRF_TRUSTED_ORIGINS",
     "http://localhost:5173,http://127.0.0.1:5173",
 )
+
+# --- JWT ----------------------------------------------------------------------
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        minutes=int(os.getenv("JWT_ACCESS_MINUTES", "60"))
+    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", "7"))),
+    # Each refresh issues a new refresh token and blacklists nothing, so a stolen
+    # refresh token stops working as soon as the real client rotates it.
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+}
 
 # --- Project metadata ---------------------------------------------------------
 

@@ -1,4 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
+
+import { useAuth } from '../auth/context.ts'
 import { ApiStatusBadge } from './ApiStatusBadge.tsx'
 
 interface NavItem {
@@ -23,6 +25,28 @@ function navLinkClass({ isActive }: { isActive: boolean }): string {
   return isActive
     ? `${base} bg-eco-600 text-white`
     : `${base} text-(--surface-muted) hover:bg-(--surface) hover:text-(--surface-text)`
+}
+
+/** Signed-in user and sign-out control. */
+function UserMenu() {
+  const { user, logout } = useAuth()
+  if (!user) return null
+
+  return (
+    <div className="flex items-center gap-3 border-t border-(--surface-border) pt-4 lg:mt-6">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{user.username}</p>
+        <p className="text-xs text-(--surface-muted)">{user.role_display}</p>
+      </div>
+      <button
+        type="button"
+        onClick={logout}
+        className="rounded-lg border border-(--surface-border) px-2.5 py-1.5 text-xs font-medium text-(--surface-muted) transition-colors hover:text-(--surface-text) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-eco-500"
+      >
+        Sign out
+      </button>
+    </div>
+  )
 }
 
 export function AppLayout() {
@@ -51,6 +75,8 @@ export function AppLayout() {
               ))}
             </ul>
           </nav>
+
+          <UserMenu />
         </header>
 
         <main className="min-w-0 flex-1">

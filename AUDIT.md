@@ -164,3 +164,29 @@ correctly, and the custom theme tokens appear in the production CSS bundle.
 **Environment note.** The Vite dev server binds IPv6-only on this machine (`[::1]:5173`), so
 `http://127.0.0.1:5173` will not connect — use `http://localhost:5173`. Port 5173 was already held by
 another process during Phase 3, so verification ran on 5199; that process was left alone.
+
+---
+
+## 10. Phase 4 changes to the repo
+
+Created in `backend/accounts/`: `__init__.py`, `apps.py`, `models.py`, `serializers.py`, `views.py`,
+`urls.py`, `permissions.py`, `admin.py`, `migrations/{__init__,0001_initial}.py`,
+`tests/{__init__,test_models,test_auth,test_permissions}.py`.
+Modified in `backend/`: `pyproject.toml` + `requirements.txt` (djangorestframework-simplejwt 5.5.1),
+`config/settings.py` (`AUTH_USER_MODEL`, accounts app, JWT as the default authentication class,
+`SIMPLE_JWT` block), `config/urls.py` (mounted `/api/auth/`).
+
+Created in `frontend/src/`: `api/tokens.ts`, `api/auth.ts`, `auth/context.ts`,
+`auth/AuthContext.tsx`, `components/ProtectedRoute.tsx`, `pages/Login.tsx`.
+Modified in `frontend/src/`: `api/client.ts` (attaches the bearer token, single refresh-and-retry on
+401), `routes.tsx` (`/login` public, everything else behind `ProtectedRoute`), `main.tsx`
+(`AuthProvider`), `components/AppLayout.tsx` (user menu and sign out).
+
+Deleted / renamed: **nothing in version control**. The gitignored dev database `backend/db.sqlite3`
+was recreated: swapping `AUTH_USER_MODEL` is incompatible with tables already built against
+`auth.User`. It was verified to hold **0 users** first, so no data was lost. Re-create a login with
+`uv run python manage.py createsuperuser`.
+
+**Design note — roles are never trusted from the token.** The JWT carries a `role` claim so the UI can
+render role-appropriate controls without a second request, but every permission class reads the role
+from the database. A test asserts that a role change takes effect on an already-issued token.

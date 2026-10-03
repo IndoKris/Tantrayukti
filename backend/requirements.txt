@@ -20,14 +20,21 @@ django==5.2.17
     #   dj-database-url
     #   django-cors-headers
     #   djangorestframework
+    #   djangorestframework-simplejwt
 django-cors-headers==4.9.0
     # via backend
 djangorestframework==3.18.1
+    # via
+    #   backend
+    #   djangorestframework-simplejwt
+djangorestframework-simplejwt==5.5.1
     # via backend
 psycopg==3.3.6
     # via backend
 psycopg-binary==3.3.6 ; implementation_name != 'pypy'
     # via psycopg
+pyjwt==2.15.1
+    # via djangorestframework-simplejwt
 python-dotenv==1.2.4
     # via backend
 sqlparse==0.6.0

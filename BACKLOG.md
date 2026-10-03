@@ -7,3 +7,8 @@ Add here instead of expanding a phase's scope.
 - [Phase 1] Decide whether `backend/main.py` stub and the empty `backend/README.md` get repurposed or left as-is.
 - [Phase 1] Resolve AUDIT Q1: pin Python to 3.12 vs keep 3.13 (TensorFlow wheel availability).
 - [Phase 1] Add a root-level `Makefile` or `npm`/`uv` task runner so both sides start with one command.
+- [Phase 4] Server-side JWT revocation on logout via simplejwt's token_blacklist app (logout is currently client-side only).
+- [Phase 4] Move the refresh token to an httpOnly cookie instead of localStorage, to harden against XSS.
+- [Phase 4] Self-service registration and password reset; users are created with `createsuperuser` or the admin today.
+- [Phase 4] `seed_users` management command for demo admin/manager/member accounts, to pair with Phase 5's `seed_spaces`.
+- [Phase 4] Scope roles per organisation rather than globally, once Phase 5's hierarchy exists.
