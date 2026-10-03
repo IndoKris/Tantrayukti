@@ -26,3 +26,8 @@ Add here instead of expanding a phase's scope.
 - [Phase 7] Extra faults: phase imbalance, failing compressor (rising current at constant power), meter drift.
 - [Phase 7] Unit tests for the simulator itself; it is currently verified by CLI runs, not by the backend test suite.
 - [Phase 7] Occupancy schedule as data (holidays, shift patterns) rather than hard-coded hour windows.
+- [Phase 8] Optional zero-fill / gap markers on the usage series, if the Phase 17 chart needs a continuous x-axis.
+- [Phase 8] Materialised hourly rollup table refreshed on ingest, if `/api/usage/` gets slow over months of data.
+- [Phase 8] Let `metering=auto` mix a mains meter with appliance meters in *sibling* rooms that have none, instead of choosing one kind estate-wide.
+- [Phase 8] Derive `mean_power_w` from energy over bucket duration as well as the sample mean, and expose both.
+- [Phase 8] Accept a `tz` query parameter so a client can request buckets in a timezone other than the server's.

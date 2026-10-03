@@ -299,3 +299,51 @@ cannot exceed apparent power.
    Now reported as a readable error via `read_token_file`, exit 1.
 2. When every upload batch failed, the process still exited 0 — a scripted run would have believed
    the data landed. `post_series` now returns a failure count and the process exits 1.
+
+---
+
+## 14. Phase 8 changes to the repo
+
+Created in `backend/telemetry/`: `rollups.py` (aggregation logic, framework-free enough to unit
+test directly), `tests/test_rollups.py`.
+Modified in `backend/telemetry/`: `views.py` (added `UsageView`), `urls.py` (mounted
+`/api/usage/`).
+Deleted / renamed: **nothing**. No migration was needed.
+
+**The double-counting trap, and the guard against it.** A room can hold both a whole-space `mains`
+meter and per-appliance meters covering the same load. Summing every device in a space therefore
+reports roughly twice the real consumption, which would make Phase 9 cost estimates and Phase 16
+comparisons wrong by a factor of two. `select_devices` resolves this explicitly:
+
+* `auto` (default) - use `mains` meters when the scope has any, else sum `appliance` meters;
+* `mains` / `appliance` - force one kind;
+* `all` - sum everything, double counting included (debugging only).
+
+Measured on the live seeded data: `auto`/`mains` report **13.85 kWh** from 3 devices, `appliance`
+**13.69 kWh** from 12, and `all` **27.54 kWh** from 15 — very nearly double. Every response carries
+`metering.requested`, `metering.applied`, `device_count` and `device_ids`, so a figure never appears
+without saying how it was derived.
+
+**Buckets are local-time.** `TruncHour`/`TruncDay`/`TruncMonth` use the active timezone
+(`Asia/Kolkata`), so a "day" is a local day. A dedicated test stores readings at 23:30 and 00:30 IST
+either side of midnight and asserts they land in *different* daily buckets — in UTC they would both
+fall on the same day, smearing Phase 9 time-of-day tariffs and the Phase 13 night-load rule across
+midnight.
+
+**Gaps are not zero-filled.** A bucket with no readings is omitted rather than reported as 0 kWh,
+because "consumed nothing" and "device was offline" are different facts and the UI must be able to
+distinguish them.
+
+**Bug found by live verification that the unit tests missed.** `?period=fortnight` returned **500**
+instead of 400. The period was validated *after* `resolve_window` had already indexed
+`DEFAULT_WINDOWS[period]`, which raises `KeyError` — but only on requests that omit `from`, and the
+existing test always supplied an explicit window. Fixed by validating the period first and also
+inside `resolve_window` (so the module is safe when used directly), plus three regression tests
+including one that exercises every valid period with no window supplied. All eight malformed-input
+cases now return 400 with an actionable message.
+
+**Tests use real simulator data.** `SimulatorDataTests` imports the Phase 7 generator from the repo
+root, stores a day of its output, and asserts the rollups reproduce the simulator's own energy and
+peak-power totals, that 24 hourly buckets sum exactly to the daily bucket, and that `auto` metering
+picks mains over the simulated appliances. The class skips with a clear reason if the simulator
+cannot be imported, so a repo-layout change cannot silently break the suite.

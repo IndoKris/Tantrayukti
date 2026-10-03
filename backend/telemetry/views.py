@@ -19,6 +19,7 @@ from rest_framework.views import APIView
 
 from accounts.permissions import IsAdmin, IsManagerOrAbove
 from spaces.models import Organisation
+from telemetry import rollups
 from telemetry.authentication import DeviceTokenAuthentication, DeviceUser
 from telemetry.models import BUFFERED_AFTER, Device, Reading
 from telemetry.serializers import (
@@ -264,3 +265,94 @@ class DeviceViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(device.readings.all())
         serializer = ReadingSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
+
+
+class UsageView(APIView):
+    """
+    GET /api/usage/
+
+    Energy and power rolled up by time bucket, device or room.
+
+    Query parameters
+    ----------------
+    `space`
+        `<kind>:<id>`, e.g. `building:3`. Kinds: organisation, building, floor, room.
+        Alternatively use the explicit `organisation=`, `building=`, `floor=`,
+        `room=` or `device=`. Omitted means every device the caller can see.
+    `period`
+        `hour` (default), `day` or `month`. Buckets are **local** days/hours.
+    `from`, `to`
+        ISO-8601 date or datetime. Defaults to the last 24 h / 30 d / 365 d
+        depending on `period`.
+    `group_by`
+        `time` (default), `device` or `room`.
+    `metering`
+        `auto` (default), `mains`, `appliance` or `all`. See `rollups` for why
+        this exists: summing a mains meter together with the appliance meters
+        underneath it double counts.
+
+    The response always reports the scope, window, metering mode actually used
+    and the devices included, so no figure appears without saying how it was
+    produced.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        params = request.query_params
+        period = params.get("period", "hour")
+        group_by = params.get("group_by", "time")
+
+        if group_by not in {"time", "device", "room"}:
+            return Response(
+                {"detail": f"Unknown group_by '{group_by}'. One of: time, device, room."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # Validate the period first: it indexes the default-window table, so
+            # an unknown value must not reach it.
+            rollups.validate_period(period)
+            scope = rollups.resolve_scope(params, self.visible_organisations())
+            devices, metering = rollups.select_devices(
+                scope.devices, params.get("metering", "auto")
+            )
+            start, end = rollups.resolve_window(params, period)
+        except rollups.ScopeError as error:
+            return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+        readings = rollups.readings_for(devices, start, end)
+
+        if group_by == "device":
+            results = rollups.by_device(readings)
+        elif group_by == "room":
+            results = rollups.by_room(readings)
+        else:
+            results = rollups.time_series(readings, period)
+
+        return Response(
+            {
+                "scope": scope.as_dict(),
+                "window": {"from": local_iso(start), "to": local_iso(end)},
+                "period": period if group_by == "time" else None,
+                "group_by": group_by,
+                "metering": {
+                    "requested": params.get("metering", "auto"),
+                    "applied": metering,
+                    "device_count": devices.count(),
+                    "device_ids": list(devices.values_list("id", flat=True)),
+                    "note": (
+                        "A whole-space mains meter supersedes the appliance meters "
+                        "beneath it; summing both would double count."
+                    ),
+                },
+                "totals": rollups.totals(readings),
+                "results": results,
+            }
+        )
+
+    def visible_organisations(self):
+        user = self.request.user
+        if user.is_superuser:
+            return Organisation.objects.all()
+        return Organisation.objects.filter(memberships__user=user)
